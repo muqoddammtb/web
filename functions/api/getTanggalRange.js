@@ -8,7 +8,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const OWNER = "mrdickymiswardi";
+const OWNER = "muqoddammtb";
 const REPO  = "server";
 const BRANCH = "main";
 
