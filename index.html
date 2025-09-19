@@ -2689,9 +2689,9 @@ logoutBtn.addEventListener("click", () => {
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-	maxTarget: 3,                                   // default denominator
-    defaultTarget: 6,                                       // denominator 1..6
-	perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 4), // default 2 unit per status (hadir1..2, dst)
+	maxTarget: 3,                                   	// Prosentase Dropdown Absensi
+    defaultTarget: 6,                               	// Pembatasan Jumlah Maksimal Absensi
+	perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 4), // Checklist Absensi
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
   };
 
