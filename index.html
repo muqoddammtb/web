@@ -11,16 +11,16 @@
 
   <!-- Favicon untuk browser -->
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/dickypagesdev/web/refs/heads/main/logo.png" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/muqoddammtb/web/refs/heads/main/logo.png" />
 
   <!-- Open Graph Meta Tags (untuk WhatsApp, FB, Telegram) -->
   <meta property="og:title" content="Portal Mutaba'ah Tahfidz" />
   <meta property="og:description" content="Mudah, simpel, akurat. Sesuai halaman Mushaf Madinah. Dilengkapi laporan otomatis." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://dickypagesdev.netlify.app/" />
+  <meta property="og:url" content="https://muqoddammtb.netlify.app/" />
 
   <!-- Gunakan gambar 512x512 -->
-  <meta property="og:image" content="https://raw.githubusercontent.com/dickypagesdev/web/refs/heads/main/logo.png" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/muqoddammtb/web/refs/heads/main/logo.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
@@ -416,13 +416,13 @@ button.lihat-quran-btn:hover::after {
 	
 <!-- HAPUS inline style="display:flex" agar tidak muncul saat awal load -->
 <div id="overlay"><span>
-<img src="https://raw.githubusercontent.com/dickypagesdev/web/main/Stopwatch.gif"></span>
+<img src="https://raw.githubusercontent.com/muqoddammtb/web/main/Stopwatch.gif"></span>
 </div>
 
 <div class="container"> 
   <!-- Halaman Login -->
   <div id="login-card" class="card">
-    <h1>Portal Mutaba'ah Tahfidz</h1>
+    <h1>Portal Mutaba'ah Tahfizh</h1>
     <form id="login-form">
       <input type="text" id="username" placeholder="Username" required />
       <div class="password-group" style="display: flex; align-items: center;">
@@ -738,7 +738,7 @@ async function ambilDaftarKelas() {
   container.innerHTML = "🔄 Memuat daftar kelas...";
 
   try {
-    const res = await fetch("https://api.github.com/repos/dickypagesdev/server/contents");
+    const res = await fetch("https://api.github.com/repos/muqoddammtb/server/contents");
     const data = await res.json();
 
     // Filter nama file seperti: kelas_1.json
@@ -2689,9 +2689,9 @@ logoutBtn.addEventListener("click", () => {
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6), // default 2 unit per status (hadir1..2, dst)
-	defaultTarget: 6,                                   // default denominator
-    maxTarget: 6,                                       // denominator 1..6
+	maxTarget: 4,                                   // default denominator
+    defaultTarget: 6,                                       // denominator 1..6
+	perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 4), // default 2 unit per status (hadir1..2, dst)
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
   };
 
@@ -2709,7 +2709,7 @@ logoutBtn.addEventListener("click", () => {
     const Title   = st.charAt(0).toUpperCase() + st.slice(1);
     const idx     = i - 1;
     const per     = ABS_FLEX_CFG.perStatus|0;
-    const sesiAll = ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"];
+    const sesiAll = ["Subuh","Pagi","Malam","Sore","Malam","Tahajjud"];
 
     // Legacy: jika tetap 2 sesi, pertahankan Pagi/Sore
     if (per === 2){
@@ -8254,7 +8254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 (()=>{
   // ===== KONFIG REPO =====
   const API    = '/api/gitFile';
-  const OWNER  = 'mrdickymiswardi';
+  const OWNER  = 'muqoddammtb';
   const REPO   = 'web';
   const BRANCH = 'main';
   const PATH   = 'index.html';
@@ -8335,9 +8335,9 @@ document.addEventListener("DOMContentLoaded", () => {
     {key:'THMS_JUZLIST_MURRANGE',   label:'23) THMS — Juz List di #murRangeOverlay (isi <li>…)</li>', editable:true, required:true},
 
     // ==== BARU: ABSENSI FLEX (4 elemen) ====
-    {key:'ABS_PER_STATUS',    label:'24) ABS Flex — perStatus (1..6)',                     editable:true,  required:true},
-    {key:'ABS_DEFAULT_TARGET',label:'25) ABS Flex — defaultTarget (1..6)',                 editable:true,  required:true},
-    {key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
+    {key:'ABS_PER_STATUS',    label:'24) Jumlah Absensi Checklist',                     editable:true,  required:true},
+    {key:'ABS_DEFAULT_TARGET',label:'25) Jangan Dirubah!',                 editable:true,  required:true},
+    {key:'ABS_MAX_TARGET',    label:'26) Jumlah Prosentase Dropdown',                     editable:true,  required:true},
     {key:'ABS_SESI_ALL',      label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])', editable:true,  required:true},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
@@ -8886,7 +8886,6 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 </script>
 <!-- ===== /Modal Editor Parsial — Single Block ===== -->
-
 
 
 
