@@ -1278,7 +1278,7 @@ async function buatUserNIS() {
       <table id="santri-table">
         <thead>
           <tr>
-            <th>Nis</th>
+            <th>Nisn</th>
             <th>Nama</th>
 			<th>Kelas</th>
             <th>Level</th>
@@ -2246,7 +2246,7 @@ background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:cen
 
     <!-- Sesi 1 -->
     <div class="mur-sesi" id="mur-sesi1" data-idx="1">
-      <h4>Murajaah Sesi 1</h4>
+      <h4>Muraja'ah Pagi</h4>
       <div class="row">
         <label>Juz
           <select id="mur1-juzFrom"><option value="">—</option></select>
@@ -2294,7 +2294,7 @@ background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:cen
 
     <!-- Sesi 2 -->
     <div class="mur-sesi" id="mur-sesi2" data-idx="2">
-      <h4>Murajaah Sesi 2</h4>
+      <h4>Muraja'ah Malam</h4>
       <div class="row">
         <label>Juz
           <select id="mur2-juzFrom"><option value="">—</option></select>
@@ -7110,7 +7110,7 @@ function fillJuzSelect(id){
       th.id = 'murRangeHeader';
       th.style.cursor = 'pointer';
       th.style.textDecoration = 'underline';
-      th.textContent = 'Setting Murajaah';
+      th.textContent = 'Setting Muraja'ah';
       const murTh = thRow.querySelector('.mur-header');
       if (murTh && murTh.nextSibling) thRow.insertBefore(th, murTh.nextSibling);
       else thRow.appendChild(th);
