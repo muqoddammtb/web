@@ -11,16 +11,16 @@
 
   <!-- Favicon untuk browser -->
   <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/suprimtb/web/refs/heads/main/logo.png" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/muqoddammtb/web/refs/heads/main/logo.png" />
 
   <!-- Open Graph Meta Tags (untuk WhatsApp, FB, Telegram) -->
   <meta property="og:title" content="Portal Mutaba'ah Tahfidz" />
   <meta property="og:description" content="Mudah, simpel, akurat. Sesuai halaman Mushaf Madinah. Dilengkapi laporan otomatis." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://suprimtb.netlify.app/" />
+  <meta property="og:url" content="https://muqoddammtb.netlify.app/" />
 
   <!-- Gunakan gambar 512x512 -->
-  <meta property="og:image" content="https://raw.githubusercontent.com/suprimtb/web/refs/heads/main/logo.png" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/muqoddammtb/web/refs/heads/main/logo.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
@@ -416,13 +416,13 @@ button.lihat-quran-btn:hover::after {
 	
 <!-- HAPUS inline style="display:flex" agar tidak muncul saat awal load -->
 <div id="overlay"><span>
-<img src="https://raw.githubusercontent.com/suprimtb/web/main/Stopwatch.gif"></span>
+<img src="https://raw.githubusercontent.com/muqoddammtb/web/main/Stopwatch.gif"></span>
 </div>
 
 <div class="container"> 
   <!-- Halaman Login -->
   <div id="login-card" class="card">
-    <h1>Portal Mutaba'ah Tahfidz</h1>
+    <h1>Portal Mutaba'ah Tahfizh</h1>
     <form id="login-form">
       <input type="text" id="username" placeholder="Username" required />
       <div class="password-group" style="display: flex; align-items: center;">
@@ -738,7 +738,7 @@ async function ambilDaftarKelas() {
   container.innerHTML = "🔄 Memuat daftar kelas...";
 
   try {
-    const res = await fetch("https://api.github.com/repos/suprimtb/server/contents");
+    const res = await fetch("https://api.github.com/repos/muqoddammtb/server/contents");
     const data = await res.json();
 
     // Filter nama file seperti: kelas_1.json
@@ -1550,51 +1550,14 @@ function extendSemesterOptions(selectEl, max = SEMESTER_MAX) {
     <!-- ⬇️ BARU: Jenjang -->
     <label>Jenjang:</label><br>
     <select id="inputJenjang" style="width:90%; margin-bottom:10px;">
-  <!-- placeholder kosong agar bisa reset ke "" -->
   <option value=""></option>
-
-  <!-- A1–A4 = ILA–ILD (label custom dipertahankan) -->
-  <option value="A1">ILA</option>
-  <option value="A2">ILB</option>
-  <option value="A3">ILC</option>
-  <option value="A4">ILD</option>
-
-  <!-- A5–A14 = 1A–1J -->
-  <option value="A5">1A</option>
-  <option value="A6">1B</option>
-  <option value="A7">1C</option>
-  <option value="A8">1D</option>
-  <option value="A9">1E</option>
-  <option value="A10">1F</option>
-  <option value="A11">1G</option>
-  <option value="A12">1H</option>
-  <option value="A13">1I</option>
-  <option value="A14">1J</option>
-
-  <!-- A15–A24 = 2A–2J -->
-  <option value="A15">2A</option>
-  <option value="A16">2B</option>
-  <option value="A17">2C</option>
-  <option value="A18">2D</option>
-  <option value="A19">2E</option>
-  <option value="A20">2F</option>
-  <option value="A21">2G</option>
-  <option value="A22">2H</option>
-  <option value="A23">2I</option>
-  <option value="A24">2J</option>
-
-  <!-- A25–A34 = 3A–3J -->
-  <option value="A25">3A</option>
-  <option value="A26">3B</option>
-  <option value="A27">3C</option>
-  <option value="A28">3D</option>
-  <option value="A29">3E</option>
-  <option value="A30">3F</option>
-  <option value="A31">3G</option>
-  <option value="A32">3H</option>
-  <option value="A33">3I</option>
-  <option value="A34">3J</option>
-</select>
+  <option value="A1">1 PDF</option>
+  <option value="A2">2 PDF</option>
+  <option value="A3">3 PDF</option>
+  <option value="A4">1 MA</option>
+  <option value="A5">2 MA</option>
+  <option value="A6">3 MA</option>
+  </select>
 
     <div style="margin-top:10px; display:flex; justify-content:space-between; gap:8px;">
       <button id="btnSimpanSantri" onclick="simpanSantriBaru()">Simpan</button>
@@ -2244,14 +2207,12 @@ background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:cen
     </style>
 
     <!-- Bullet list cakep -->
-    <ul class="juz-list">
-      <li>Semester 1: <strong>8</strong> Juz</li>
+    <ul class="juz-list"><li>Semester 1: <strong>8</strong> Juz</li>
       <li>Semester 2: <strong>5</strong> Juz</li>
       <li>Semester 3: <strong>5</strong> Juz</li>
       <li>Semester 4: <strong>5</strong> Juz</li>
       <li>Semester 5: <strong>5</strong> Juz</li>
-      <li>Semester 6: <strong>2</strong> Juz</li>
-    </ul>
+      <li>Semester 6: <strong>2</strong> Juz</li></ul>
 
     <hr style="border:none; border-top:1px solid #eee; margin:8px 0 12px;">
 
@@ -2525,39 +2486,31 @@ background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:cen
 
   // === Fungsi atur dropdown kelas ===
 function aturDropdownKelas(user) {
-  const semuaKelas = [
-    "kelas_012526","kelas_022526","kelas_032526","kelas_042526","kelas_052526","kelas_062526",
+  const semuaKelas = [  "kelas_012526","kelas_022526","kelas_032526","kelas_042526","kelas_052526","kelas_062526",
     "kelas_072526","kelas_082526","kelas_092526","kelas_102526","kelas_112526","kelas_122526",
     "kelas_132526","kelas_142526","kelas_152526","kelas_162526","kelas_172526","kelas_182526",
-    "kelas_192526","kelas_202526","kelas_212526","kelas_222526","kelas_232526","kelas_242526"
-  ];
+    "kelas_192526","kelas_202526"];
 
-  const namaKelasCustom = {
-    kelas_012526: "Ust. Tukimin",
-    kelas_022526: "Ust. Dicky Miswardi",
-    kelas_032526: "Ust. Jundullah BA",
-    kelas_042526: "Ust. Abdullah.",
-    kelas_052526: "Ust. Ro'uuf Noor Huda Su'udin",
-    kelas_062526: "Ust. Salahuddin Santoaji Priatmojo",
-    kelas_072526: "Ust. Hammam Ahmed Saleh Al Naqeb",
-    kelas_082526: "Ust. Alif Rafiqul",
-    kelas_092526: "Ust. Ali Wardana",
-    kelas_102526: "Ust. Mullah Muhammad Umar",
-    kelas_112526: "Ust. Akhsani Taqwim",
-    kelas_122526: "Ust. Ikhsan Nur Khamid",
-    kelas_132526: "Ust. Abdul Haq",
-    kelas_142526: "Ust. Abdullah Al Guspari",
-    kelas_152526: "Ust. Abdullah Rafi",
-    kelas_162526: "Ust. Fajrul Ihsan",
-    kelas_172526: "Ust. Idris",
-    kelas_182526: "Ust. Muhammad athayya mumtaz",
-    kelas_192526: "Ust. M. Hanan Azizi",
-    kelas_202526: "Ust. Muhammad Rama Miayasin",
-    kelas_212526: "Ust. Nur Afiq",
-    kelas_222526: "Ust. Raditya Baswara Raharjo",
-    kelas_232526: "Ust. Rafie Zahran Kurniawan",
-    kelas_242526: "Ust. Shidiq Hasan Khan"
-  };
+  const namaKelasCustom = {  kelas_012526: "Ustadzah Lylika Tri Canda Medita",
+  kelas_022526: "Ustadzah Dewi Khumariah Rhasya",
+  kelas_032526: "Ustadzah Nadia Nurfadhilah",
+  kelas_042526: "Ustadzah Eliya",
+  kelas_052526: "Ustadzah Rima Karimah",
+  kelas_062526: "Ustadzah Rishana Hanifa",
+  kelas_072526: "Ustadzah Karimah",
+  kelas_082526: "Ustadzah Nurfadhilah Kamaliyah",
+  kelas_092526: "Ustadzah Umi Muthoharoh",
+  kelas_102526: "Ustadzah Sofi Agnia",
+  kelas_112526: "Ustadzah Ririn Nurlaily",
+  kelas_122526: "Ustadzah Zihan Audrian Hidayat",
+  kelas_132526: "Ustadzah Nopia",
+  kelas_142526: "Ustadz Imam Tolhah",
+  kelas_152526: "Ustadz Fahri Aziz",
+  kelas_162526: "Ustadz Saeful Munawar Rizal",
+  kelas_172526: "Ustadz Aflah Musoddaq",
+  kelas_182526: "Ustadz Saif Abdullah",
+  kelas_192526: "Ustadz Muhammad Farhan Hidayat",
+  kelas_202526: "Ustadz Farrid Ilallah"};
 
   kelasSelect.innerHTML = "";
 
@@ -2736,9 +2689,9 @@ logoutBtn.addEventListener("click", () => {
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6), // default 2 unit per status (hadir1..2, dst)
-	defaultTarget: 6,                                   // default denominator
-    maxTarget: 6,                                       // denominator 1..6
+	maxTarget: 3,                                   	// Prosentase Dropdown Absensi
+    defaultTarget: 6,                               	// Pembatasan Jumlah Maksimal Absensi
+	perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 4), // Checklist Absensi
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
   };
 
@@ -2756,7 +2709,7 @@ logoutBtn.addEventListener("click", () => {
     const Title   = st.charAt(0).toUpperCase() + st.slice(1);
     const idx     = i - 1;
     const per     = ABS_FLEX_CFG.perStatus|0;
-    const sesiAll = ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"];
+    const sesiAll = ["Subuh","Pagi","Malam","Sore","Malam","Tahajjud"];
 
     // Legacy: jika tetap 2 sesi, pertahankan Pagi/Sore
     if (per === 2){
@@ -3098,7 +3051,7 @@ async function loadSantriData() {
   overlay.style.display = "flex";
 
   // ===== NEW: Konfigurasi & util jenjang (future-proof) =====
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 34); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
 
   const parseJenjang = (v) => {
     const m = /^A(\d+)$/.exec(String(v || "").trim());
@@ -3388,51 +3341,23 @@ async function loadSantriData() {
           <td class="col-nama">${santri.nama ?? ""}${subTanggal}</td>
           <td>
             <select class="jenjang">
-              <option value="A1"  ${jenNow === 'A1'  ? 'selected' : ''}>ILA</option>
-              <option value="A2"  ${jenNow === 'A2'  ? 'selected' : ''}>ILB</option>
-              <option value="A3"  ${jenNow === 'A3'  ? 'selected' : ''}>ILC</option>
-              <option value="A4"  ${jenNow === 'A4'  ? 'selected' : ''}>ILD</option>
-              <option value="A5"  ${jenNow === 'A5'  ? 'selected' : ''}>1A</option>
-              <option value="A6"  ${jenNow === 'A6'  ? 'selected' : ''}>1B</option>
-              <option value="A7"  ${jenNow === 'A7'  ? 'selected' : ''}>1C</option>
-              <option value="A8"  ${jenNow === 'A8'  ? 'selected' : ''}>1D</option>
-              <option value="A9"  ${jenNow === 'A9'  ? 'selected' : ''}>1E</option>
-              <option value="A10" ${jenNow === 'A10' ? 'selected' : ''}>1F</option>
-              <option value="A11" ${jenNow === 'A11' ? 'selected' : ''}>1G</option>
-              <option value="A12" ${jenNow === 'A12' ? 'selected' : ''}>1H</option>
-              <option value="A13" ${jenNow === 'A13' ? 'selected' : ''}>1I</option>
-              <option value="A14" ${jenNow === 'A14' ? 'selected' : ''}>1J</option>
-              <option value="A15" ${jenNow === 'A15' ? 'selected' : ''}>2A</option>
-              <option value="A16" ${jenNow === 'A16' ? 'selected' : ''}>2B</option>
-              <option value="A17" ${jenNow === 'A17' ? 'selected' : ''}>2C</option>
-              <option value="A18" ${jenNow === 'A18' ? 'selected' : ''}>2D</option>
-              <option value="A19" ${jenNow === 'A19' ? 'selected' : ''}>2E</option>
-              <option value="A20" ${jenNow === 'A20' ? 'selected' : ''}>2F</option>
-              <option value="A21" ${jenNow === 'A21' ? 'selected' : ''}>2G</option>
-              <option value="A22" ${jenNow === 'A22' ? 'selected' : ''}>2H</option>
-              <option value="A23" ${jenNow === 'A23' ? 'selected' : ''}>2I</option>
-              <option value="A24" ${jenNow === 'A24' ? 'selected' : ''}>2J</option>
-              <option value="A25" ${jenNow === 'A25' ? 'selected' : ''}>3A</option>
-              <option value="A26" ${jenNow === 'A26' ? 'selected' : ''}>3B</option>
-              <option value="A27" ${jenNow === 'A27' ? 'selected' : ''}>3C</option>
-              <option value="A28" ${jenNow === 'A28' ? 'selected' : ''}>3D</option>
-              <option value="A29" ${jenNow === 'A29' ? 'selected' : ''}>3E</option>
-              <option value="A30" ${jenNow === 'A30' ? 'selected' : ''}>3F</option>
-              <option value="A31" ${jenNow === 'A31' ? 'selected' : ''}>3G</option>
-              <option value="A32" ${jenNow === 'A32' ? 'selected' : ''}>3H</option>
-              <option value="A33" ${jenNow === 'A33' ? 'selected' : ''}>3I</option>
-              <option value="A34" ${jenNow === 'A34' ? 'selected' : ''}>3J</option>
-            </select>
+    <option value="A1" ${jenNow === 'A1' ? 'selected' : ''}>1 PDF</option>
+    <option value="A2" ${jenNow === 'A2' ? 'selected' : ''}>2 PDF</option>
+    <option value="A3" ${jenNow === 'A3' ? 'selected' : ''}>3 PDF</option>
+    <option value="A4" ${jenNow === 'A4' ? 'selected' : ''}>1 MA</option>
+    <option value="A5" ${jenNow === 'A5' ? 'selected' : ''}>2 MA</option>
+    <option value="A6" ${jenNow === 'A6' ? 'selected' : ''}>3 MA</option>
+  </select>
           </td>
           <td>
             <select class="semester">
-              <option value="1" ${semNow == 1 || semNow == "1" ? 'selected' : ''}>1</option>
-              <option value="2" ${semNow == 2 || semNow == "2" ? 'selected' : ''}>2</option>
-              <option value="3" ${semNow == 3 || semNow == "3" ? 'selected' : ''}>3</option>
-              <option value="4" ${semNow == 4 || semNow == "4" ? 'selected' : ''}>4</option>
-              <option value="5" ${semNow == 5 || semNow == "5" ? 'selected' : ''}>5</option>
-              <option value="6" ${semNow == 6 || semNow == "6" ? 'selected' : ''}>6</option>
-            </select>
+    <option value="1" ${String(semNow) === '1' ? 'selected' : ''}>1</option>
+    <option value="2" ${String(semNow) === '2' ? 'selected' : ''}>2</option>
+    <option value="3" ${String(semNow) === '3' ? 'selected' : ''}>3</option>
+    <option value="4" ${String(semNow) === '4' ? 'selected' : ''}>4</option>
+    <option value="5" ${String(semNow) === '5' ? 'selected' : ''}>5</option>
+    <option value="6" ${String(semNow) === '6' ? 'selected' : ''}>6</option>
+  </select>
           </td>
 
           <!-- ============ ABSENSI FLEX via MODAL BUTTON ============ -->
@@ -3444,10 +3369,10 @@ async function loadSantriData() {
 
           <td>
             <select class="keterangan">
-              <option value=""   ${!ketNow ? 'selected' : ''}></option>
-              <option value="SP1" ${ketNow === 'SP1' ? 'selected' : ''}>SP1</option>
-              <option value="SP2" ${ketNow === 'SP2' ? 'selected' : ''}>SP2</option>
-            </select>
+    <option value="" ${!ketNow ? 'selected' : ''}></option>
+    <option value="SP1" ${ketNow === 'SP1' ? 'selected' : ''}>SP1</option>
+    <option value="SP2" ${ketNow === 'SP2' ? 'selected' : ''}>SP2</option>
+  </select>
           </td>
           <td>
             <select class="surah-dari">${surahOptions}</select>
@@ -4289,34 +4214,28 @@ document.getElementById('mur-save')?.addEventListener('click', function(){ simpa
   }
 
   // === Helper Kelas/Kelompok ===
-  function buildKelasKelompokLine(kelas, kelasEl) {
-    const kelasNum = (String(kelas||'').match(/(\d+)/)?.[1]) || (kelas || '-');
-    const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {
-      kelas_012526: "Kelompok Ust. Tukimin",
-      kelas_022526: "Kelompok Ust. Dicky Miswardi",
-      kelas_032526: "Kelompok Ust. Jundullah BA",
-      kelas_042526: "Kelompok Ust. Abdullah.",
-      kelas_052526: "Kelompok Ust. Ro'uuf Noor Huda Su'udin",
-      kelas_062526: "Kelompok Ust. Salahuddin Santoaji Priatmojo",
-      kelas_072526: "Kelompok Ust. Hammam Ahmed Saleh Al Naqeb",
-      kelas_082526: "Kelompok Ust. Alif Rafiqul",
-      kelas_092526: "Kelompok Ust. Ali Wardana",
-      kelas_102526: "Kelompok Ust. Mullah Muhammad Umar",
-      kelas_112526: "Kelompok Ust. Akhsani Taqwim",
-      kelas_122526: "Kelompok Ust. Ikhsan Nur Khamid",
-      kelas_132526: "Kelompok Ust. Abdul Haq",
-      kelas_142526: "Kelompok Ust. Abdullah Al Guspari",
-      kelas_152526: "Kelompok Ust. Abdullah Rafi",
-      kelas_162526: "Kelompok Ust. Fajrul Ihsan",
-      kelas_172526: "Kelompok Ust. Idris",
-      kelas_182526: "Kelompok Ust. Muhammad athayya mumtaz",
-      kelas_192526: "Kelompok Ust. M. Hanan Azizi",
-      kelas_202526: "Kelompok Ust. Muhammad Rama Miayasin",
-      kelas_212526: "Kelompok Ust. Nur Afiq",
-      kelas_222526: "Kelompok Ust. Raditya Baswara Raharjo",
-      kelas_232526: "Kelompok Ust. Rafie Zahran Kurniawan",
-      kelas_242526: "Kelompok Ust. Shidiq Hasan Khan"
-    };
+function buildKelasKelompokLine(kelas, kelasEl) {
+  const kelasNum = (String(kelas||'').match(/(\d+)/)?.[1]) || (kelas || '-');
+  const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Kelompok Ustadzah Lylika Tri Canda Medita",
+  kelas_022526: "Kelompok Ustadzah Dewi Khumariah Rhasya",
+  kelas_032526: "Kelompok Ustadzah Nadia Nurfadhilah",
+  kelas_042526: "Kelompok Ustadzah Eliya",
+  kelas_052526: "Kelompok Ustadzah Rima Karimah",
+  kelas_062526: "Kelompok Ustadzah Rishana Hanifa",
+  kelas_072526: "Kelompok Ustadzah Karimah",
+  kelas_082526: "Kelompok Ustadzah Nurfadhilah Kamaliyah",
+  kelas_092526: "Kelompok Ustadzah Umi Muthoharoh",
+  kelas_102526: "Kelompok Ustadzah Sofi Agnia",
+  kelas_112526: "Kelompok Ustadzah Ririn Nurlaily",
+  kelas_122526: "Kelompok Ustadzah Zihan Audrian Hidayat",
+  kelas_132526: "Kelompok Ustadzah Nopia",
+  kelas_142526: "Kelompok Ustadz Imam Tolhah",
+  kelas_152526: "Kelompok Ustadz Fahri Aziz",
+  kelas_162526: "Kelompok Ustadz Saeful Munawar Rizal",
+  kelas_172526: "Kelompok Ustadz Aflah Musoddaq",
+  kelas_182526: "Kelompok Ustadz Saif Abdullah",
+  kelas_192526: "Kelompok Ustadz Muhammad Farhan Hidayat",
+  kelas_202526: "Kelompok Ustadz Farrid Ilallah"};
     let kelompok = custom[kelas] || "";
     if (!kelompok) {
       const optText = kelasEl?.options?.[kelasEl.selectedIndex]?.text?.trim() || "";
@@ -5568,7 +5487,7 @@ if (typeof window.drawTableHeader !== 'function') {
     return out.length ? out.join(', ') : '-';
   }
   function PDF_percentCapaian(totalJuzNum, semester){
-    const batasSemester = { 1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30 };
+    const batasSemester = {1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30};
     const total = Number(totalJuzNum);
     const sem   = Number(semester);
     if (!Number.isFinite(total)) return 0;
@@ -6381,7 +6300,7 @@ async function hitungTotalAllJuzFromTable() {
     });
 
     // Batas ketuntasan per semester
-    const batasSemester = { 1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30 };
+    const batasSemester = {1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30};
 
     // Update tabel + siapkan data simpan
     const dataToSave = [];
@@ -6546,7 +6465,7 @@ async function hitungTotalAllJuzOtomatis() {
       rekap[key].totalJuz += parseNum(item?.totalJuz);
     });
 
-    const batasSemester = { 1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30 };
+    const batasSemester = {1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30};
 
     rowsArr.forEach(row => {
       const key  = normKey(row.dataset?.key || row.dataset?.nis || row.dataset?.id);
@@ -7394,7 +7313,7 @@ function fillJuzSelect(id){
 
 <script>
   // ====== KONFIG (opsional dari window.*) ======
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 34);             // 34 default; 0 = tanpa batas atas
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9);             // 34 default; 0 = tanpa batas atas
   const JENJANG_SAFETY_CAP = Number(window.JENJANG_SAFETY_CAP ?? 1000); // darurat bila tanpa batas
 
   // ====== Helper jenjang dinamis ======
@@ -8335,7 +8254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 (()=>{
   // ===== KONFIG REPO =====
   const API    = '/api/gitFile';
-  const OWNER  = 'mrdickymiswardi';
+  const OWNER  = 'muqoddammtb';
   const REPO   = 'web';
   const BRANCH = 'main';
   const PATH   = 'index.html';
@@ -8416,9 +8335,9 @@ document.addEventListener("DOMContentLoaded", () => {
     {key:'THMS_JUZLIST_MURRANGE',   label:'23) THMS — Juz List di #murRangeOverlay (isi <li>…)</li>', editable:true, required:true},
 
     // ==== BARU: ABSENSI FLEX (4 elemen) ====
-    {key:'ABS_PER_STATUS',    label:'24) ABS Flex — perStatus (1..6)',                     editable:true,  required:true},
-    {key:'ABS_DEFAULT_TARGET',label:'25) ABS Flex — defaultTarget (1..6)',                 editable:true,  required:true},
-    {key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
+    {key:'ABS_PER_STATUS',    label:'24) Jumlah Absensi Checklist',                     editable:true,  required:true},
+    {key:'ABS_DEFAULT_TARGET',label:'25) Jangan Dirubah!',                 editable:true,  required:true},
+    {key:'ABS_MAX_TARGET',    label:'26) Jumlah Prosentase Dropdown',                     editable:true,  required:true},
     {key:'ABS_SESI_ALL',      label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])', editable:true,  required:true},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
