@@ -2688,7 +2688,7 @@ logoutBtn.addEventListener("click", () => {
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6), // default 2 unit per status (hadir1..2, dst)
+    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 3), // default 2 unit per status (hadir1..2, dst)
 	defaultTarget: 6,                                   // default denominator
     maxTarget: 6,                                       // denominator 1..6
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
@@ -3050,7 +3050,7 @@ async function loadSantriData() {
   overlay.style.display = "flex";
 
   // ===== NEW: Konfigurasi & util jenjang (future-proof) =====
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 10); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 7); // ubah ke 100 / 300 / 1000 sesuai kebutuhan
 
   const parseJenjang = (v) => {
     const m = /^A(\d+)$/.exec(String(v || "").trim());
@@ -7313,7 +7313,7 @@ function fillJuzSelect(id){
 
 <script>
   // ====== KONFIG (opsional dari window.*) ======
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 10);             // 34 default; 0 = tanpa batas atas
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 7);             // 34 default; 0 = tanpa batas atas
   const JENJANG_SAFETY_CAP = Number(window.JENJANG_SAFETY_CAP ?? 1000); // darurat bila tanpa batas
 
   // ====== Helper jenjang dinamis ======
