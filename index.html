@@ -8255,15 +8255,15 @@ document.addEventListener("DOMContentLoaded", () => {
 <script>
 (()=>{
   // ===== KONFIG REPO =====
-  const API    = '/.netlify/functions/gitFile';
-  const OWNER  = 'mrdickymiswardi';
+  const API    = '/api/gitFile';
+  const OWNER  = 'dickypagesdev';
   const REPO   = 'web';
   const BRANCH = 'main';
   const PATH   = 'index.html';
 
   // ===== STATE =====
   let fullText = '', lastSha = null;
-  const STAGED = {}; // key -> isi blok yg diedit
+  const STAGED = {}; // key -> view string yg DIEDIT (diambil dari single block)
   const $ = s => document.querySelector(s);
 
   // ===== UI =====
@@ -8280,7 +8280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sessionStorage.getItem('isAdmin') === '1') return true;
     const pass = prompt('Masukkan password admin:'); if (pass == null) return false;
     try{
-      const r = await fetch('/.netlify/functions/cek-admin', {
+      const r = await fetch('/api/cek-admin', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ password: pass })
       });
@@ -8336,11 +8336,11 @@ document.addEventListener("DOMContentLoaded", () => {
     {key:'THMS_JUZLIST_JUZOVERLAY', label:'22) THMS — Juz List di #juzOverlay (isi <li>…)</li>', editable:true, required:true},
     {key:'THMS_JUZLIST_MURRANGE',   label:'23) THMS — Juz List di #murRangeOverlay (isi <li>…)</li>', editable:true, required:true},
 
-    /* ==== BARU: ABSENSI FLEX (4 elemen) ==== */
-    {key:'ABS_PER_STATUS', label:'24) Absensi Flex — perStatus (default di Number(window.ABS_FLEX_PER_STATUS ?? N))', editable:true, required:true},
-    {key:'ABS_MAX_TARGET', label:'25) Absensi Flex — maxTarget (1..6)', editable:true, required:true},
-    {key:'ABS_DEF_TARGET', label:'26) Absensi Flex — defaultTarget (1..6)', editable:true, required:true},
-    {key:'ABS_SESI_ALL',   label:'27) Absensi Flex — sesiAll (array label sesi, contoh: ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"])', editable:true, required:true},
+    // ==== BARU: ABSENSI FLEX (4 elemen) ====
+    {key:'ABS_PER_STATUS',    label:'24) ABS Flex — perStatus (1..6)',                     editable:true,  required:true},
+    {key:'ABS_DEFAULT_TARGET',label:'25) ABS Flex — defaultTarget (1..6)',                 editable:true,  required:true},
+    {key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
+    {key:'ABS_SESI_ALL',      label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])', editable:true,  required:true},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
 
@@ -8405,7 +8405,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fullText = js.content||''; lastSha = js.sha||null;
   }
 
-  // ====== MARKER UTILS ======
+  // ====== MARKER UTILS (single-block) ======
   const openMark = k => `/*[[${k}]]*/`;
   const closeMark= k => `/*[[/${k}]]*/`;
 
@@ -8445,7 +8445,9 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = `${n} blok`;
   }
 
-  function trimKeepNewlineEdges(s){ return String(s).replace(/^\n+/, '').replace(/\n+$/, ''); }
+  function trimKeepNewlineEdges(s){
+    return String(s).replace(/^\n+/, '').replace(/\n+$/, '');
+  }
   function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
   // ===== Segment finders =====
@@ -8557,22 +8559,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // ==== ABSENSI FLEX finders ====
-  function findAbsPerStatus(){
+  // === ABSENSI FLEX finders ===
+  function findAbsFlexPerStatus(){
     // perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6)
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,2000}?perStatus\s*:\s*Number\(\s*window\.ABS_FLEX_PER_STATUS\s*\?\?\s*(\d+)\s*\)/i);
+    return byRegex(/window\.ABS_FLEX_CFG\s*=\s*window\.ABS_FLEX_CFG\s*\|\|\s*{[\s\S]{0,5000}?perStatus\s*:\s*Number\(\s*window\.ABS_FLEX_PER_STATUS\s*\?\?\s*(\d+)\s*\)/i);
   }
-  function findAbsMaxTarget(){
-    // maxTarget: 6
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,2000}?maxTarget\s*:\s*(\d+)/i);
-  }
-  function findAbsDefTarget(){
+  function findAbsFlexDefaultTarget(){
     // defaultTarget: 6
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,2000}?defaultTarget\s*:\s*(\d+)/i);
+    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,5000}?defaultTarget\s*:\s*(\d+)/i);
   }
-  function findAbsSesiAll(){
-    // const sesiAll = ["Subuh","Pagi",...]
-    return byRegex(/function\s+defaultLabel\s*\([^)]*\)\s*{[\s\S]{0,2000}?const\s+sesiAll\s*=\s*(\[[\s\S]*?\])/i);
+  function findAbsFlexMaxTarget(){
+    // maxTarget: 6
+    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,5000}?maxTarget\s*:\s*(\d+)/i);
+  }
+  function findAbsFlexSesiAll(){
+    // const sesiAll = ["Subuh","Pagi",...];
+    return byRegex(/function\s+defaultLabel\s*\([^)]*\)\s*{[\s\S]{0,2000}?const\s+sesiAll\s*=\s*(\[[\s\S]*?\])\s*;/i);
   }
 
   // ===== buildView =====
@@ -8625,13 +8627,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return seg.text.trim();
     }
 
-    // ABS FLEX (4)
-    if (key==='ABS_PER_STATUS' || key==='ABS_MAX_TARGET' || key==='ABS_DEF_TARGET'){
+    // ABS FLEX views
+    if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
       return String(seg.text).trim();
     }
     if (key==='ABS_SESI_ALL'){
-      // tampilkan array lengkap, mis. ["Subuh","Pagi",...]
-      return String(seg.text).trim();
+      return String(seg.text).trim(); // array literal
     }
 
     return (seg.text||'').trim();
@@ -8672,11 +8673,11 @@ document.addEventListener("DOMContentLoaded", () => {
       case 'THMS_JUZLIST_JUZOVERLAY':  return findUlJuzInnerIn('juzOverlay');
       case 'THMS_JUZLIST_MURRANGE':    return findUlJuzInnerIn('murRangeOverlay');
 
-      // ABS FLEX (4)
-      case 'ABS_PER_STATUS': return findAbsPerStatus();
-      case 'ABS_MAX_TARGET': return findAbsMaxTarget();
-      case 'ABS_DEF_TARGET': return findAbsDefTarget();
-      case 'ABS_SESI_ALL':   return findAbsSesiAll();
+      // ABS FLEX
+      case 'ABS_PER_STATUS':     return findAbsFlexPerStatus();
+	  case 'ABS_MAX_TARGET':     return findAbsFlexMaxTarget();
+      case 'ABS_DEFAULT_TARGET': return findAbsFlexDefaultTarget();
+      case 'ABS_SESI_ALL':       return findAbsFlexSesiAll();
     }
     return null;
   }
@@ -8758,8 +8759,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }).filter(Boolean);
         const newObjInner=objPairs.map(([n,nama])=>`  kelas_${n}: "${nama}"`).join(',\n');
 
-        tasks.push({start:seg.arr.start, end:seg.arr.end, content:newArrInner.replace(/\s+$/,'')});
-        tasks.push({start:seg.obj.start, end:seg.obj.end, content:newObjInner});
+        const segBundle = getSegment('KELAS_BUNDLE');
+        tasks.push({start:segBundle.arr.start, end:segBundle.arr.end, content:newArrInner.replace(/\s+$/,'')});
+        tasks.push({start:segBundle.obj.start, end:segBundle.obj.end, content:newObjInner});
         continue;
       }
 
@@ -8777,7 +8779,7 @@ document.addEventListener("DOMContentLoaded", () => {
         continue;
       }
 
-      // 10–15: THMS maps
+      // 10–13: THMS maps
       if (key==='THMS_GLOBAL' || key==='THMS_PDF' || key==='THMS_FROM_T' || key==='THMS_AUTO'){
         const map=parseLinesKeyVal(view); const ks=Object.keys(map);
         if(ks.length===0) return {error:`${rules.label||key}: isi minimal satu pasangan k:v (mis. 1: 5)`};
@@ -8843,46 +8845,26 @@ document.addEventListener("DOMContentLoaded", () => {
         continue;
       }
 
-      // Dua UL THMS
+      // Dua UL THMS (isi <li>…)
       if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE'){
         const html=String(view||'').trim();
         tasks.push({start:seg.start, end:seg.end, content:html});
         continue;
       }
 
-      // ===== ABS FLEX (4) =====
-      if (key==='ABS_PER_STATUS'){
-        const n = Number(String(view||'').trim());
-        if (!Number.isInteger(n) || n<1 || n>6) return {error:`${rules.label||key}: harus bilangan bulat 1..6.`};
-        tasks.push({start:seg.start, end:seg.end, content:String(n)});
+      // === ABS FLEX (angka 1..6) ===
+      if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
+        const trimmed = String(view||'').trim();
+        const num = Number(trimmed);
+        if (!Number.isInteger(num) || num<1 || num>6) return {error:`${rules.label||key}: masukkan bilangan bulat 1..6.`};
+        tasks.push({start:seg.start, end:seg.end, content:String(num)});
         continue;
       }
-      if (key==='ABS_MAX_TARGET'){
-        const n = Number(String(view||'').trim());
-        if (!Number.isInteger(n) || n<1 || n>6) return {error:`${rules.label||key}: harus bilangan bulat 1..6.`};
-        tasks.push({start:seg.start, end:seg.end, content:String(n)});
-        continue;
-      }
-      if (key==='ABS_DEF_TARGET'){
-        const n = Number(String(view||'').trim());
-        if (!Number.isInteger(n) || n<1 || n>6) return {error:`${rules.label||key}: harus bilangan bulat 1..6.`};
-        tasks.push({start:seg.start, end:seg.end, content:String(n)});
-        continue;
-      }
+      // === ABS FLEX sesiAll (array literal) ===
       if (key==='ABS_SESI_ALL'){
-        // harus array JSON string (["Subuh","Pagi",...])
-        const raw = String(view||'').trim();
-        let arr;
-        try{
-          arr = JSON.parse(raw);
-        }catch(_){
-          return {error:`${rules.label||key}: harus array JSON, contoh: ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"]`};
-        }
-        if (!Array.isArray(arr) || !arr.every(s=>typeof s==='string'))
-          return {error:`${rules.label||key}: isi harus array string.`};
-        // normalize -> JSON.stringify tanpa spasi ekstra
-        const literal = JSON.stringify(arr);
-        tasks.push({start:seg.start, end:seg.end, content:literal});
+        const txt = String(view||'').trim();
+        if (!/^\[\s*[\s\S]*\]\s*$/.test(txt)) return {error:`${rules.label||key}: isi harus array literal, contoh: ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"]`};
+        tasks.push({start:seg.start, end:seg.end, content:txt});
         continue;
       }
     }
