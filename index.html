@@ -2688,7 +2688,7 @@ logoutBtn.addEventListener("click", () => {
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 2), // default 2 unit per status (hadir1..2, dst)
+    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 2), // Checklist absensi (hadir1..2, dst)
 	maxTarget: 3,                                       // denominator 1..3
 	defaultTarget: 3,                                   // default denominator
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
@@ -8184,6 +8184,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+
 <!-- ===== Modal Editor Parsial — Single Block ===== -->
 <style>
   #editBtnIndex{
@@ -8213,7 +8214,6 @@ document.addEventListener("DOMContentLoaded", () => {
   .btn-danger{border-color:#6b1f2d;background:#3a1a24;color:#ffd0d4}
   .btn-ok{border-color:#1f5b33;background:#16321c;color:#c6ffde}
 
-  /* === Tombol inline (opsional) === */
   #editBtnIndex{
     position: static !important;
     right: auto !important;
@@ -8254,14 +8254,14 @@ document.addEventListener("DOMContentLoaded", () => {
 (()=>{
   // ===== KONFIG REPO =====
   const API    = '/api/gitFile';
-  const OWNER  = 'muqoddammtb';
+  const OWNER  = 'mrdickymiswardi';
   const REPO   = 'web';
   const BRANCH = 'main';
   const PATH   = 'index.html';
 
   // ===== STATE =====
   let fullText = '', lastSha = null;
-  const STAGED = {}; // key -> view string yg DIEDIT (diambil dari single block)
+  const STAGED = {}; // key -> view string
   const $ = s => document.querySelector(s);
 
   // ===== UI =====
@@ -8301,7 +8301,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }catch(err){ console.error(err); alert('Gagal verifikasi admin: '+err.message); return false; }
   }
 
-  // ===== DAFTAR ITEM (urutan tampil di 1 blok) =====
+  // ===== DAFTAR ITEM =====
   const ITEMS = [
     {key:'LOGIN_H1',      label:'1) Judul Login (H1)',                                     editable:true,  required:true},
     {key:'DASHBOARD_H1',  label:'2) Judul Dashboard (H1)',                                 editable:true,  required:true},
@@ -8334,11 +8334,11 @@ document.addEventListener("DOMContentLoaded", () => {
     {key:'THMS_JUZLIST_JUZOVERLAY', label:'22) THMS — Juz List di #juzOverlay (isi <li>…)</li>', editable:true, required:true},
     {key:'THMS_JUZLIST_MURRANGE',   label:'23) THMS — Juz List di #murRangeOverlay (isi <li>…)</li>', editable:true, required:true},
 
-    // ==== BARU: ABSENSI FLEX (4 elemen) ====
-    {key:'ABS_PER_STATUS',    label:'24) ABS Flex — perStatus (1..6)',                     editable:true,  required:true},
-    {key:'ABS_DEFAULT_TARGET',label:'25) ABS Flex — defaultTarget (1..6)',                 editable:true,  required:true},
-    {key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
-    {key:'ABS_SESI_ALL',      label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])', editable:true,  required:true},
+    // ==== ABS FLEX ====
+    {key:'ABS_PER_STATUS',     label:'24) ABS Flex — perStatus (1..6)',                    editable:true,  required:true},
+    {key:'ABS_DEFAULT_TARGET', label:'25) ABS Flex — defaultTarget (1..6)',                editable:true,  required:true},
+    {key:'ABS_MAX_TARGET',     label:'26) ABS Flex — maxTarget (1..6)',                    editable:true,  required:true},
+    {key:'ABS_SESI_ALL',       label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])',editable:true,  required:true},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
 
@@ -8352,7 +8352,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateBadge();
   };
   btnClose.onclick = () => { modal.style.display = 'none'; };
-
   btnReload.onclick = async () => {
     if (!confirm('Muat ulang dari file dan BUANG perubahan di editor?')) return;
     await ensureLoaded(true);
@@ -8403,7 +8402,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fullText = js.content||''; lastSha = js.sha||null;
   }
 
-  // ====== MARKER UTILS (single-block) ======
+  // ===== MARKER UTILS =====
   const openMark = k => `/*[[${k}]]*/`;
   const closeMark= k => `/*[[/${k}]]*/`;
 
@@ -8443,12 +8442,10 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = `${n} blok`;
   }
 
-  function trimKeepNewlineEdges(s){
-    return String(s).replace(/^\n+/, '').replace(/\n+$/, '');
-  }
-  function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  const trimKeepNewlineEdges = s => String(s).replace(/^\n+/, '').replace(/\n+$/, '');
+  const escapeReg = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
-  // ===== Segment finders =====
+  // ===== Segment finders (umum) =====
   function h1InsideDiv(divId){
     const t = fullText;
     const reDiv = new RegExp(`<div[^>]*id=["']${divId}["'][^>]*>`, 'i');
@@ -8557,36 +8554,49 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // === ABSENSI FLEX finders ===
-  function findAbsFlexPerStatus(){
-    // perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6)
-    return byRegex(/window\.ABS_FLEX_CFG\s*=\s*window\.ABS_FLEX_CFG\s*\|\|\s*{[\s\S]{0,5000}?perStatus\s*:\s*Number\(\s*window\.ABS_FLEX_PER_STATUS\s*\?\?\s*(\d+)\s*\)/i);
+  // ===== ABS FLEX — robust block finder =====
+  function findAbsFlexBlock(){
+    // Tangkap isi objek { ... } milik window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || { ... };
+    const re = /window\.ABS_FLEX_CFG\s*=\s*window\.ABS_FLEX_CFG\s*\|\|\s*{\s*([\s\S]*?)\s*}\s*;/i;
+    const t = fullText; const m = re.exec(t);
+    if (!m) return null;
+    const inner = m[1];
+    const innerStart = m.index + m[0].indexOf(inner);
+    const innerEnd = innerStart + inner.length;
+    return { start: innerStart, end: innerEnd, text: inner };
   }
-  function findAbsFlexDefaultTarget(){
-    // defaultTarget: 6
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,5000}?defaultTarget\s*:\s*(\d+)/i);
+  function pickNumberInProp(block, prop){
+    // Cocokkan baik "prop: 6" maupun "prop: Number(window.X ?? 6)"
+    const re = new RegExp(
+      `\\b${prop}\\s*:\\s*(?:Number\\([^?]*\\?\\?\\s*(\\d+)\\s*\\)|(?:(\\d+)))`,
+      'i'
+    );
+    const m = re.exec(block.text);
+    if (!m) return null;
+    const valStr = m[1] || m[2] || '';
+    const start = block.start + m.index + m[0].lastIndexOf(valStr);
+    const end = start + valStr.length;
+    return { start, end, text: valStr };
   }
-  function findAbsFlexMaxTarget(){
-    // maxTarget: 6
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,5000}?maxTarget\s*:\s*(\d+)/i);
-  }
+
+  // sesiAll array di defaultLabel()
   function findAbsFlexSesiAll(){
-    // const sesiAll = ["Subuh","Pagi",...];
-    return byRegex(/function\s+defaultLabel\s*\([^)]*\)\s*{[\s\S]{0,2000}?const\s+sesiAll\s*=\s*(\[[\s\S]*?\])\s*;/i);
+    return byRegex(/function\s+defaultLabel\s*\([^)]*\)\s*{[\s\S]{0,2500}?const\s+sesiAll\s*=\s*(\[[\s\S]*?\])\s*;/i);
   }
 
   // ===== buildView =====
   function buildView(key){
-    const seg = getSegment(key); if (!seg) return '';
-    if (key==='LOGIN_H1' || key==='DASHBOARD_H1') return seg.text.trim();
-
+    // umum
+    const seg = getSegment(key);
+    if (key==='LOGIN_H1' || key==='DASHBOARD_H1') return seg?.text.trim() || '';
     if (key==='TABLE_HEADERS'){
-      const {cells} = seg; return cells.map(c=>c.text.trim()).join('\n');
+      if (!seg) return ''; return seg.cells.map(c=>c.text.trim()).join('\n');
     }
     if (key==='JENJANG_OPTS' || key==='SEMESTER_OPTS' || key==='KET_OPTS'){
-      return seg.items.map(it=>`${it.value} => ${decodeEntities((it.label||'').trim())}`).join('\n');
+      if (!seg) return ''; return seg.items.map(it=>`${it.value} => ${decodeEntities((it.label||'').trim())}`).join('\n');
     }
     if (key==='KELAS_BUNDLE'){
+      if (!seg) return '';
       const arrNums = (seg.arr.text.match(/"kelas_(\d+)"/g)||[]).map(s=>s.replace(/[^0-9]/g,''));
       const objPairs = [];
       (seg.obj.text.match(/kelas_(\d+)\s*:\s*"([^"]*)"/g)||[]).forEach(s=>{
@@ -8601,39 +8611,30 @@ document.addEventListener("DOMContentLoaded", () => {
       ].join('\n');
     }
     if (key==='KELOMPOK_FB'){
+      if (!seg) return '';
       const lines=[]; (seg.text.match(/kelas_(\d+)\s*:\s*"([^"]*)"/g)||[]).forEach(s=>{
         const m=s.match(/kelas_(\d+)\s*:\s*"([^"]*)"/); if (m) lines.push(`${m[1]} = ${m[2]}`);
       }); return lines.join('\n');
     }
     if (key==='THMS_GLOBAL' || key==='THMS_PDF' || key==='THMS_FROM_T' || key==='THMS_AUTO'){
-      const pairs = parseObjectPairs(seg.text);
-      const ks = Object.keys(pairs).map(Number).sort((a,b)=>a-b);
-      return ks.map(k => `${k}=${pairs[k]}`).join('\n');
+      if (!seg) return ''; const pairs = parseObjectPairs(seg.text);
+      return Object.keys(pairs).map(Number).sort((a,b)=>a-b).map(k=>`${k}=${pairs[k]}`).join('\n');
     }
-    if (key==='JENJANG_MAX' || key==='JENJANG_MAX_CFG') return String(seg.text).trim();
+    if (key==='JENJANG_MAX' || key==='JENJANG_MAX_CFG') return seg?.text.trim() || '';
+    if (key==='PDF_REKAP_LOK' || key==='PDF_ALL_LOK' || key==='PDF_SANTRI_LOK') return seg?.text.trim() || '';
+    if (key==='PDF_REKAP_TTD' || key==='PDF_ALL_TTD' || key==='PDF_SANTRI_TTD') return seg? `${seg.left.text}\n${seg.right.text}` : '';
+    if (key==='MODAL_SANTRI_JENJANG') return seg? seg.items.map(it=>`${it.value} => ${decodeEntities(it.label)}`).join('\n') : '';
+    if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE') return seg?.text.trim() || '';
 
-    if (key==='PDF_REKAP_LOK' || key==='PDF_ALL_LOK' || key==='PDF_SANTRI_LOK'){
-      return String(seg.text).trim();
-    }
-    if (key==='PDF_REKAP_TTD' || key==='PDF_ALL_TTD' || key==='PDF_SANTRI_TTD'){
-      return `${seg.left.text}\n${seg.right.text}`;
-    }
-    if (key==='MODAL_SANTRI_JENJANG'){
-      return seg.items.map(it=>`${it.value} => ${decodeEntities(it.label)}`).join('\n');
-    }
-    if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE'){
-      return seg.text.trim();
-    }
+    // ABS FLEX (baca dari blok)
+    const blk = findAbsFlexBlock();
+    if (!blk) return '';
+    if (key==='ABS_PER_STATUS')     return pickNumberInProp(blk,'perStatus')?.text || '';
+    if (key==='ABS_DEFAULT_TARGET') return pickNumberInProp(blk,'defaultTarget')?.text || '';
+    if (key==='ABS_MAX_TARGET')     return pickNumberInProp(blk,'maxTarget')?.text || '';
+    if (key==='ABS_SESI_ALL')       return (findAbsFlexSesiAll()?.text || '').trim();
 
-    // ABS FLEX views
-    if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
-      return String(seg.text).trim();
-    }
-    if (key==='ABS_SESI_ALL'){
-      return String(seg.text).trim(); // array literal
-    }
-
-    return (seg.text||'').trim();
+    return '';
   }
 
   function getSegment(key){
@@ -8670,12 +8671,6 @@ document.addEventListener("DOMContentLoaded", () => {
       case 'MODAL_SANTRI_JENJANG':     return findOptionsInSelectById('inputJenjang');
       case 'THMS_JUZLIST_JUZOVERLAY':  return findUlJuzInnerIn('juzOverlay');
       case 'THMS_JUZLIST_MURRANGE':    return findUlJuzInnerIn('murRangeOverlay');
-
-      // ABS FLEX
-      case 'ABS_PER_STATUS':     return findAbsFlexPerStatus();
-      case 'ABS_DEFAULT_TARGET': return findAbsFlexDefaultTarget();
-      case 'ABS_MAX_TARGET':     return findAbsFlexMaxTarget();
-      case 'ABS_SESI_ALL':       return findAbsFlexSesiAll();
     }
     return null;
   }
@@ -8689,19 +8684,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const rules = ITEM[key] || {};
       const view  = STAGED[key];
       const seg   = getSegment(key);
-      if (!seg){ notFound.push(key); continue; }
 
-      // 1 & 2: H1
+      // ====== Umum (tidak berubah) ======
       if (key==='LOGIN_H1' || key==='DASHBOARD_H1'){
-        const val = (view||'').trim();
+        if (!seg){ notFound.push(key); continue; }
+        const val=(view||'').trim();
         if (rules.required && !val) return {error:`${rules.label||key}: tidak boleh kosong.`};
         tasks.push({start:seg.start, end:seg.end, content:escapeHtml(val)});
         continue;
       }
-
-      // 5: <th>
       if (key==='TABLE_HEADERS'){
-        const lines = (view||'').split('\n'); const {cells}=seg;
+        if (!seg){ notFound.push(key); continue; }
+        const lines=(view||'').split('\n'); const {cells}=seg;
         if (lines.length!==cells.length) return {error:`${rules.label||key}: jumlah baris (${lines.length}) harus = jumlah <th> (${cells.length}).`};
         for (let i=0;i<cells.length;i++){
           const txt=(lines[i]??'').trim();
@@ -8710,19 +8704,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         continue;
       }
-
-      // <select> options by class
       if (key==='JENJANG_OPTS' || key==='SEMESTER_OPTS' || key==='KET_OPTS'){
+        if (!seg){ notFound.push(key); continue; }
         const selCls = (key==='JENJANG_OPTS' ? 'jenjang' : key==='SEMESTER_OPTS' ? 'semester' : 'keterangan');
-        const segSel = getSegment(key);
-
         const lines=(view||'').split('\n').map(s=>s.trim()).filter(Boolean);
         const pairs=[];
         for (const line of lines){
           const mm=line.match(/^([^=]*)=>(.*)$/);
           if (!mm) return {error:`${rules.label||key}: format baris invalid: "${line}". Contoh: A15 => 2A`};
-          const value=(mm[1]||'').trim();
-          const label=(mm[2]||'').trim();
+          const value=(mm[1]||'').trim(); const label=(mm[2]||'').trim();
           if (selCls!=='keterangan' && value==='') return {error:`${rules.label||key}: VALUE tidak boleh kosong.`};
           pairs.push({value,label});
         }
@@ -8736,38 +8726,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const inner=(pairs.length?pairs.map(p=>optLine(selCls,p.value,p.label)).join('\n'):'');
         const newInner=(inner?'\n'+inner+'\n  ':'');
-        tasks.push({ start: segSel.innerStart, end: segSel.innerEnd, content: newInner });
+        tasks.push({ start: seg.innerStart, end: seg.innerEnd, content: newInner });
         continue;
       }
-
-      // 3: KELAS_BUNDLE
       if (key==='KELAS_BUNDLE'){
+        if (!seg){ notFound.push(key); continue; }
         const mArr = view.match(/\/\*\s*===\s*semuaKelas.*?\*\/\s*([\s\S]*?)\n\s*\/\*/i);
         const mObj = view.match(/\/\*\s*===\s*namaKelasCustom.*?\*\/\s*([\s\S]*)$/i);
         if(!mArr || !mObj) return {error:`${rules.label||key}: format tidak valid. Jangan hapus marker komentar di dalam blok.`};
-
         const nums=mArr[1].replace(/\s+/g,'').split(',').filter(Boolean);
         const badNum=nums.find(n=>!/^\d+$/.test(n)); if (badNum) return {error:`${rules.label||key}: angka kelas tidak valid: ${badNum}`};
-
         const arrContent=nums.map((n,i)=>(i%6===0?'\n    ':'')+`"kelas_${n}"`).join(',')+(nums.length?'\n  ':'');
         const newArrInner=arrContent.trim()?('  '+arrContent.trim()+'\n'):'';
-
         const objPairs=mObj[1].split('\n').map(s=>s.trim()).filter(Boolean).map(line=>{
           const mm=line.match(/^(\d+)\s*=\s*(.*)$/); return mm?[mm[1],mm[2]]:null;
         }).filter(Boolean);
         const newObjInner=objPairs.map(([n,nama])=>`  kelas_${n}: "${nama}"`).join(',\n');
-
-        const segBundle = getSegment('KELAS_BUNDLE');
-        tasks.push({start:segBundle.arr.start, end:segBundle.arr.end, content:newArrInner.replace(/\s+$/,'')});
-        tasks.push({start:segBundle.obj.start, end:segBundle.obj.end, content:newObjInner});
+        tasks.push({start:seg.arr.start, end:seg.arr.end, content:newArrInner.replace(/\s+$/,'')});
+        tasks.push({start:seg.obj.start, end:seg.obj.end, content:newObjInner});
         continue;
       }
-
-      // 4: Fallback Kelompok
       if (key==='KELOMPOK_FB'){
+        if (!seg){ notFound.push(key); continue; }
         const lines=(view||'').split('\n').map(s=>s.trim()).filter(Boolean);
-        const entries=[];
-        for (const line of lines){
+        const entries=[]; for (const line of lines){
           const m=line.match(/^(\d+)\s*=\s*(.*)$/);
           if(!m) return {error:`${rules.label||key}: baris tidak valid: "${line}" (pakai format: ANGKA = Nama)`};
           entries.push({num:m[1], name:m[2]});
@@ -8776,54 +8758,45 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.push({start:seg.start, end:seg.end, content});
         continue;
       }
-
-      // 10–13: THMS maps
       if (key==='THMS_GLOBAL' || key==='THMS_PDF' || key==='THMS_FROM_T' || key==='THMS_AUTO'){
+        if (!seg){ notFound.push(key); continue; }
         const map=parseLinesKeyVal(view); const ks=Object.keys(map);
         if(ks.length===0) return {error:`${rules.label||key}: isi minimal satu pasangan k:v (mis. 1: 5)`};
         const content=Object.keys(map).sort((a,b)=>Number(a)-Number(b)).map(k=>`${k}: ${map[k]}`).join(', ');
         tasks.push({start:seg.start, end:seg.end, content});
         continue;
       }
-
-      // 6: JENJANG_MAX (loadSantriData) harus >0
       if (key==='JENJANG_MAX'){
-        const trimmed=String(view||'').trim();
-        if (!trimmed) return {error:`${rules.label||key}: tidak boleh kosong.`};
-        const num=Number(trimmed);
+        if (!seg){ notFound.push(key); continue; }
+        const num=Number(String(view||'').trim());
         if(!Number.isInteger(num) || num<=0) return {error:`${rules.label||key}: harus bilangan bulat > 0.`};
         tasks.push({start:seg.start, end:seg.end, content:String(num)});
         continue;
       }
-      // 7: JENJANG_MAX_CFG (global) >=0
       if (key==='JENJANG_MAX_CFG'){
-        const trimmed=String(view||'').trim();
-        if (trimmed==='') return {error:`${rules.label||key}: tidak boleh kosong.`};
-        const num=Number(trimmed);
+        if (!seg){ notFound.push(key); continue; }
+        const num=Number(String(view||'').trim());
         if(!Number.isInteger(num) || num<0) return {error:`${rules.label||key}: harus bilangan bulat ≥ 0 (0 = tanpa batas).`};
         tasks.push({start:seg.start, end:seg.end, content:String(num)});
         continue;
       }
-
-      // Lokasi
       if (key==='PDF_REKAP_LOK' || key==='PDF_ALL_LOK' || key==='PDF_SANTRI_LOK'){
+        if (!seg){ notFound.push(key); continue; }
         const val=(view||'').trim(); if(!val) return {error:`${rules.label||key}: tidak boleh kosong.`};
         tasks.push({start:seg.start, end:seg.end, content:escapeHtml(val)});
         continue;
       }
-
-      // TTD (2 baris)
       if (key==='PDF_REKAP_TTD' || key==='PDF_ALL_TTD' || key==='PDF_SANTRI_TTD'){
+        if (!seg){ notFound.push(key); continue; }
         const lines=String(view||'').split('\n');
         const left=(lines[0]||'').trim(); const right=(lines[1]||'').trim();
-        if(!left || !right) return {error:`${rules.label||key}: isi 2 baris: baris-1 label kiri, baris-2 label kanan.`};
+        if(!left || !right) return {error:`${rules.label||key}: isi 2 baris: baris-1 kiri, baris-2 kanan.`};
         tasks.push({start:seg.left.start, end:seg.left.end, content:escapeHtml(left)});
         tasks.push({start:seg.right.start, end:seg.right.end, content:escapeHtml(right)});
         continue;
       }
-
-      // Modal Tambah Santri — Jenjang (id="inputJenjang")
       if (key==='MODAL_SANTRI_JENJANG'){
+        if (!seg){ notFound.push(key); continue; }
         const lines=(view||'').split('\n').map(s=>s.trim());
         const pairs=[];
         for (const line of lines){
@@ -8842,27 +8815,34 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.push({start:seg.innerStart, end:seg.innerEnd, content:newInner});
         continue;
       }
-
-      // Dua UL THMS (isi <li>…)
       if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE'){
+        if (!seg){ notFound.push(key); continue; }
         const html=String(view||'').trim();
         tasks.push({start:seg.start, end:seg.end, content:html});
         continue;
       }
 
-      // === ABS FLEX (angka 1..6) ===
+      // ===== ABS FLEX (edit di dalam blok) =====
       if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
-        const trimmed = String(view||'').trim();
-        const num = Number(trimmed);
+        const blk = findAbsFlexBlock();
+        if (!blk) { notFound.push(key); continue; }
+        const prop = (key==='ABS_PER_STATUS' ? 'perStatus' : key==='ABS_DEFAULT_TARGET' ? 'defaultTarget' : 'maxTarget');
+        const num = Number(String(view||'').trim());
         if (!Number.isInteger(num) || num<1 || num>6) return {error:`${rules.label||key}: masukkan bilangan bulat 1..6.`};
-        tasks.push({start:seg.start, end:seg.end, content:String(num)});
+
+        const hit = pickNumberInProp(blk, prop);
+        if (!hit) return {error:`Tidak menemukan properti ${prop} di ABS_FLEX_CFG.`};
+
+        tasks.push({start: hit.start, end: hit.end, content: String(num)});
         continue;
       }
-      // === ABS FLEX sesiAll (array literal) ===
+
       if (key==='ABS_SESI_ALL'){
+        const segArr = findAbsFlexSesiAll();
+        if (!segArr) { notFound.push(key); continue; }
         const txt = String(view||'').trim();
         if (!/^\[\s*[\s\S]*\]\s*$/.test(txt)) return {error:`${rules.label||key}: isi harus array literal, contoh: ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"]`};
-        tasks.push({start:seg.start, end:seg.end, content:txt});
+        tasks.push({start: segArr.start, end: segArr.end, content: txt});
         continue;
       }
     }
