@@ -2690,8 +2690,8 @@ logoutBtn.addEventListener("click", () => {
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
     perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6), // default 2 unit per status (hadir1..2, dst)
-	maxTarget: 6,                                       // denominator 1..6
 	defaultTarget: 6,                                   // default denominator
+    maxTarget: 6,                                       // denominator 1..6
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
   };
 
@@ -8336,8 +8336,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ==== BARU: ABSENSI FLEX (4 elemen) ====
     {key:'ABS_PER_STATUS',    label:'24) ABS Flex — perStatus (1..6)',                     editable:true,  required:true},
-	{key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
     {key:'ABS_DEFAULT_TARGET',label:'25) ABS Flex — defaultTarget (1..6)',                 editable:true,  required:true},
+    {key:'ABS_MAX_TARGET',    label:'26) ABS Flex — maxTarget (1..6)',                     editable:true,  required:true},
     {key:'ABS_SESI_ALL',      label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])', editable:true,  required:true},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
@@ -8626,7 +8626,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ABS FLEX views
-    if (key==='ABS_PER_STATUS' || key==='ABS_MAX_TARGET' || key==='ABS_DEFAULT_TARGET'){
+    if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
       return String(seg.text).trim();
     }
     if (key==='ABS_SESI_ALL'){
@@ -8673,8 +8673,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // ABS FLEX
       case 'ABS_PER_STATUS':     return findAbsFlexPerStatus();
-	  case 'ABS_MAX_TARGET':     return findAbsFlexMaxTarget();
       case 'ABS_DEFAULT_TARGET': return findAbsFlexDefaultTarget();
+      case 'ABS_MAX_TARGET':     return findAbsFlexMaxTarget();
       case 'ABS_SESI_ALL':       return findAbsFlexSesiAll();
     }
     return null;
@@ -8851,7 +8851,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // === ABS FLEX (angka 1..6) ===
-      if (key==='ABS_PER_STATUS' || key==='ABS_MAX_TARGET' || key==='ABS_DEFAULT_TARGET'){
+      if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
         const trimmed = String(view||'').trim();
         const num = Number(trimmed);
         if (!Number.isInteger(num) || num<1 || num>6) return {error:`${rules.label||key}: masukkan bilangan bulat 1..6.`};
