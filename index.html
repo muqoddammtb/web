@@ -409,16 +409,25 @@ button.lihat-quran-btn:hover::after {
   text-align: center;
 }
 
-	  .judul-atas {
-  font-size: 1rem;   /* lebih kecil */
-  font-weight: normal;
-  display: block;
+	  .login-header h1 {
+  display: flex;
+  flex-direction: column; /* atur jadi dua baris */
+  align-items: flex-start; /* sejajar kiri */
+  margin: 0;
+}
+
+.judul-atas {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 2px;   /* jarak bawah kecil */
+  line-height: 1.2;
 }
 
 .judul-bawah {
-  font-size: 1.3rem; /* lebih besar */
+  font-size: 1.2rem;
   font-weight: bold;
-  display: block;
+  margin-top: 0;        /* hilangkan jarak atas */
+  line-height: 1.2;
 }
 
 	  /* === OVERRIDE: samakan mobile dengan desktop untuk area tombol login === */
