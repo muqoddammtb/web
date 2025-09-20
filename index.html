@@ -388,6 +388,26 @@ button.lihat-quran-btn:hover::after {
   .password-group { flex-direction: row; }
 }
 
+	  /* Header Login: Logo + Judul sejajar */
+.login-header {
+  display: flex;
+  align-items: center;       /* vertikal tengah */
+  justify-content: center;   /* center di dalam card */
+  gap: 10px;                 /* jarak antara logo dan teks */
+  margin-bottom: 16px;
+  flex-wrap: wrap;           /* kalau layar kecil, bisa turun ke bawah */
+}
+
+.login-header img {
+  height: 1.8em;             /* ikuti tinggi teks */
+  width: auto;
+}
+
+.login-header h1 {
+  font-size: 1.2rem;         /* ukuran teks, bisa kamu sesuaikan */
+  margin: 0;
+  text-align: center;
+}
 
 	  /* === OVERRIDE: samakan mobile dengan desktop untuk area tombol login === */
 @media (max-width: 600px) {
@@ -422,27 +442,38 @@ button.lihat-quran-btn:hover::after {
 <div class="container"> 
   <!-- Halaman Login -->
   <div id="login-card" class="card">
-    <h1>Mutaba'ah Tahfizh Ponpes AL MUQODDAM</h1>
+    
+    <!-- Header Login (Logo + Judul) -->
+    <div class="login-header">
+      <img src="https://raw.githubusercontent.com/muqoddammtb/web/main/muqoddam.jpg" 
+           alt="Logo Mutaba'ah Tahfizh" />
+      <h1>Mutaba'ah Tahfizh Ponpes AL MUQODDAM</h1>
+    </div>
+
+    <!-- Form Login -->
     <form id="login-form">
       <input type="text" id="username" placeholder="Username" required />
+      
       <div class="password-group" style="display: flex; align-items: center;">
-   <div class="password-wrapper">
-    <input type="password" id="password" placeholder="Password" required />
-    <span id="toggle-password" class="toggle-password">👁</span>
-  </div>
-  <button type="submit">Masuk</button>
-</div>
-
-
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="Password" required />
+          <span id="toggle-password" class="toggle-password">👁</span>
+        </div>
+        <button type="submit">Masuk</button>
+      </div>
 
       <div class="login-actions">
         <button type="button" onclick="toggleChangePassword()">Ganti Password</button>
         <button type="button" onclick="munculkanModalDaftarAdmin()">Daftar Admin</button>
         <button type="button" onclick="munculkanValidasiAdmin()">Daftar User Kelas</button>
-		<button type="button" onclick="bukaModalTambahKelas()">Tambah Kelas</button>
-		<button type="button" onclick="munculkanValidasiAdminNIS()">Daftar User NIS</button>
+        <button type="button" onclick="bukaModalTambahKelas()">Tambah Kelas</button>
+        <button type="button" onclick="munculkanValidasiAdminNIS()">Daftar User NIS</button>
       </div>
     </form>
+
+    <p id="login-error" style="color: red; display: none;">Username atau password salah!</p>
+  </div>
+</div>
 
 
 
