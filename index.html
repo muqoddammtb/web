@@ -409,6 +409,18 @@ button.lihat-quran-btn:hover::after {
   text-align: center;
 }
 
+	  .judul-atas {
+  font-size: 1rem;   /* lebih kecil */
+  font-weight: normal;
+  display: block;
+}
+
+.judul-bawah {
+  font-size: 1.3rem; /* lebih besar */
+  font-weight: bold;
+  display: block;
+}
+
 	  /* === OVERRIDE: samakan mobile dengan desktop untuk area tombol login === */
 @media (max-width: 600px) {
   .login-actions {
@@ -447,7 +459,10 @@ button.lihat-quran-btn:hover::after {
     <div class="login-header">
       <img src="https://raw.githubusercontent.com/muqoddammtb/web/main/muqoddam.jpg" 
            alt="Logo Mutaba'ah Tahfizh" />
-      <h1>Mutaba'ah Tahfizh Ponpes AL MUQODDAM</h1>
+      <h1>
+  <span class="judul-atas">Mutaba'ah Tahfizh</span><br>
+  <span class="judul-bawah"> Ponpes AL MUQODDAM</span>
+</h1>
     </div>
 
     <!-- Form Login -->
