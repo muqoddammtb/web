@@ -409,26 +409,27 @@ button.lihat-quran-btn:hover::after {
   text-align: center;
 }
 
-	  .login-header h1 {
+	  .judul {
   display: flex;
-  flex-direction: column; /* atur jadi dua baris */
-  align-items: flex-start; /* sejajar kiri */
+  flex-direction: column; /* otomatis jadi 2 baris */
+  align-items: center;    /* rata tengah */
   margin: 0;
+  padding: 0;
+  line-height: 1.1;       /* rapatkan antar baris */
 }
 
 .judul-atas {
-  font-size: 1.2rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.5px;   /* jarak bawah kecil */
-  line-height: 1.2;
+  font-size: 1rem;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
 }
 
 .judul-bawah {
   font-size: 1.2rem;
   font-weight: bold;
-  margin-top: 0;        /* hilangkan jarak atas */
-  line-height: 1.2;
+  margin: 0;
+  padding: 0;
 }
 
 	  /* === OVERRIDE: samakan mobile dengan desktop untuk area tombol login === */
@@ -469,9 +470,9 @@ button.lihat-quran-btn:hover::after {
     <div class="login-header">
       <img src="https://raw.githubusercontent.com/muqoddammtb/web/main/muqoddam.jpg" 
            alt="Logo Mutaba'ah Tahfizh" />
-      <h1>
-  <span class="judul-atas">Mutaba'ah Tahfizh</span><br>
-  <span class="judul-bawah"> Ponpes AL MUQODDAM</span>
+   <h1 class="judul">
+  <span class="judul-atas">Mutaba'ah Tahfizh</span>
+  <span class="judul-bawah">Ponpes AL MUQODDAM</span>
 </h1>
     </div>
 
