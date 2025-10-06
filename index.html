@@ -7804,10 +7804,11 @@ const pTextFrm = pickNonEmpty(ds[`ptext${i}`], fromRec(i,'pText'));
 const pHurFrm  = pickNonEmpty(ds[`phuruf${i}`], fromRec(i,'pHuruf'));
 
 // Anggap score=0 itu "kosong" KECUALI server memang kirim predikat (pText/pHuruf)
+// 0 SELALU dianggap kosong
 const hasMeaningfulScore =
   scFrom != null &&
   String(scFrom) !== '' &&
-  !(Number(scFrom) === 0 && !pTextFrm && !pHurFrm);
+  Number(scFrom) !== 0;
 
 if (hasMeaningfulScore) {
   const sc = Math.max(0, Math.min(100, parseInt(scFrom,10) || 0));
@@ -7839,8 +7840,8 @@ if (hasMeaningfulScore) {
   // pastikan dataset tidak menyisakan 0
   if (cell){
     delete cell.dataset[`score${i}`];
-    delete cell.dataset[`ptext${i}`];
-    delete cell.dataset[`phuruf${i}`];
+	delete cell.dataset[`ptext${i}`];
+	delete cell.dataset[`phuruf${i}`];
   }
 }
 
@@ -8009,13 +8010,16 @@ if (hasMeaningfulScore) {
           cell.dataset[`juz${i}`] = num(ses.juzVal || 0).toFixed(2);
           // Anggap score=0 itu kosong KECUALI server juga kirim pText/pHuruf
 const sc  = (ses.score != null ? Number(ses.score) : null);
-const pt  = (ses.pText  != null ? String(ses.pText)  : null);
-const ph  = (ses.pHuruf != null ? String(ses.pHuruf) : null);
-const keepScore = (sc != null && !(sc === 0 && !pt && !ph));
+const keepScore = (sc != null && sc !== 0);
 
-if (keepScore) cell.dataset[`score${i}`] = String(sc); else delete cell.dataset[`score${i}`];
-if (pt != null) cell.dataset[`ptext${i}`]   = pt;      else delete cell.dataset[`ptext${i}`];
-if (ph != null) cell.dataset[`phuruf${i}`]  = ph;      else delete cell.dataset[`phuruf${i}`];
+if (keepScore) {
+  cell.dataset[`score${i}`] = String(sc);
+} else {
+  delete cell.dataset[`score${i}`];
+  // buang juga predikat legacy agar tak memicu prefill lagi
+  delete cell.dataset[`ptext${i}`];
+  delete cell.dataset[`phuruf${i}`];
+}
         }
       });
     }
