@@ -8180,11 +8180,14 @@ if (hasMeaningfulScore) {
     if (currentRowEl){
   const cell = currentRowEl.querySelector('.murajaah-cell');
       if (cell){
-        ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf','juz'].forEach(k=>{
-          const key = `${k}${idx}`; if (key in cell.dataset) delete cell.dataset[key];
-        });
-        wipeAdd(currentRowEl, idx);
-  cell.dataset[`wipe${idx}`] = '1';
+        ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf'].forEach(k=>{
+  const key = `${k}${idx}`; if (key in cell.dataset) delete cell.dataset[key];
+});
+// penting: tandai sesi ini sebagai WIPED dengan juz=0 (jangan hapus!)
+cell.dataset[`juz${idx}`] = '0';
+
+wipeAdd(currentRowEl, idx);
+cell.dataset[`wipe${idx}`] = '1';
       }
     }
 
