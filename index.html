@@ -7458,8 +7458,7 @@ function juzOfAyah(s,a){
 
     if (isPristine){
       $(`#mur${idx}-pagesHint`).textContent='';
-$(`#mur${idx}-totalJuz`).textContent='';
-
+      $(`#mur${idx}-totalJuz`).textContent='0.00';
       setPredikatUI(idx);
       murState[idx]={...murState[idx], sF:null,aF:null,sT:null,aT:null,pFrom:'',pTo:'',jFrom:null,jTo:null,total:0};
     } else {
@@ -7474,8 +7473,6 @@ $(`#mur${idx}-totalJuz`).textContent='';
           $(`#mur${idx}-pagesHint`).textContent=`Halaman: ${pages.pFrom}—${pages.pTo}`;
         } else {
           $(`#mur${idx}-pagesHint`).textContent='';
-$(`#mur${idx}-totalJuz`).textContent='';
-
         }
 
         const jF=juzOfAyah(sF,aF), jT=juzOfAyah(sT,aT);
@@ -7501,8 +7498,7 @@ $(`#mur${idx}-totalJuz`).textContent='';
           jFrom:jF, jTo:jT, total};
       } else {
         $(`#mur${idx}-pagesHint`).textContent='';
-$(`#mur${idx}-totalJuz`).textContent='';
-
+        $(`#mur${idx}-totalJuz`).textContent='0.00';
         setPredikatUI(idx);
         murState[idx]={...murState[idx], total:0};
       }
@@ -7523,26 +7519,9 @@ $(`#mur${idx}-totalJuz`).textContent='';
           cell.dataset[`sf${i}`]=st.sF||''; cell.dataset[`af${i}`]=st.aF||'';
           cell.dataset[`st${i}`]=st.sT||''; cell.dataset[`at${i}`]=st.aT||'';
           cell.dataset[`pf${i}`]=st.pFrom||''; cell.dataset[`pt${i}`]=st.pTo||'';
-          cell.dataset[`jfrom${i}`] = (st.jFrom ?? ''); 
-			cell.dataset[`jto${i}`]   = (st.jTo   ?? '');
-
-			// Tulis juz{i} hanya kalau range lengkap; kalau tidak, hapus supaya tidak jadi "0.00" default.
-			if (st.sF && st.aF && st.sT && st.aT) {
-  			cell.dataset[`juz${i}`] = (st.total || 0).toFixed(2);
-			} else {
-  			delete cell.dataset[`juz${i}`];
-			}
-
-			// Skor tetap hanya saat ada nilai
-			if (st.score != null){
-  			cell.dataset[`score${i}`] = String(st.score);
-  			cell.dataset[`ptext${i}`] = st.pText || '';
-  			cell.dataset[`phuruf${i}`]= st.pHuruf || '';
-			} else {
-  			delete cell.dataset[`score${i}`];
-  			delete cell.dataset[`ptext${i}`];
-  			delete cell.dataset[`phuruf${i}`];
-			}
+          cell.dataset[`jfrom${i}`]=st.jFrom||''; cell.dataset[`jto${i}`]=st.JTo||st.jTo||'';
+          cell.dataset[`juz${i}`]=(st.total||0).toFixed(2);
+          if(st.score!=null){ cell.dataset[`score${i}`]=String(st.score); cell.dataset[`ptext${i}`]=st.pText||''; cell.dataset[`phuruf${i}`]=st.pHuruf||''; }
         });
         const valEl=cell.querySelector('.mur-val'); if(valEl) valEl.textContent = grand.toFixed(2)+' juz';
       }
@@ -7705,7 +7684,7 @@ $(`#mur${idx}-totalJuz`).textContent='';
       $(`#mur${i}-score`).value = '';
       $(`#mur${i}-predikatBadge`).textContent = '–';
       $(`#mur${i}-pagesHint`).textContent = '';
-      $(`#mur${i}-totalJuz`).textContent = '';
+      $(`#mur${i}-totalJuz`).textContent = '0.00';
       murState[i] = {
         touched:false, sF:null,aF:null,sT:null,aT:null,
         pFrom:'', pTo:'', jFrom:null, jTo:null,
@@ -7775,7 +7754,7 @@ $(`#mur${idx}-totalJuz`).textContent='';
         $(`#mur${i}-score`).value = '';
         $(`#mur${i}-predikatBadge`).textContent = '–';
         $(`#mur${i}-pagesHint`).textContent = '';
-        $(`#mur${i}-totalJuz`).textContent = '';
+        $(`#mur${i}-totalJuz`).textContent = '0.00';
         murState[i] = { touched:false, sF:null,aF:null,sT:null,aT:null, pFrom:'',pTo:'', jFrom:null,jTo:null, total:0, score:null, pText:'', pHuruf:'' };
         return;
       }
@@ -7818,42 +7797,12 @@ $(`#mur${idx}-totalJuz`).textContent='';
         $(`#mur${i}-juzFrom`).value = jf!==undefined ? String(jf) : '';
         $(`#mur${i}-juzTo`).value   = jt!==undefined ? String(jt) : '';
 
-        const scFrom   = pickNonEmpty(ds[`score${i}`], fromRec(i,'score'));
-const pTextFrm = pickNonEmpty(ds[`ptext${i}`], fromRec(i,'pText'));
-const pHurFrm  = pickNonEmpty(ds[`phuruf${i}`], fromRec(i,'pHuruf'));
-
-// Anggap "0" sebagai KOSONG jika tidak ada pText/pHuruf (hindari ROSIB massal)
-const hasMeaningfulScore = (
-  scFrom != null && String(scFrom) !== '' &&
-  !(Number(scFrom) === 0 && !pTextFrm && !pHurFrm)
-);
-
-if (hasMeaningfulScore) {
-  const sc = Math.max(0, Math.min(100, parseInt(scFrom,10) || 0));
-  $(`#mur${i}-score`).value = String(sc);
-  const pred = getPredikat(sc);
-  $(`#mur${i}-predikatBadge`).textContent = `${pred.text} (${pred.huruf})`;
-  murState[i].score  = sc;
-  murState[i].pText  = (pTextFrm ?? pred.text) || '';
-  murState[i].pHuruf = (pHurFrm  ?? pred.huruf) || '';
-  if (cell){
-    cell.dataset[`score${i}`] = String(sc);
-    cell.dataset[`ptext${i}`] = murState[i].pText;
-    cell.dataset[`phuruf${i}`]= murState[i].pHuruf;
-  }
-} else {
-  $(`#mur${i}-score`).value = '';
-  $(`#mur${i}-predikatBadge`).textContent = '–';
-  murState[i].score  = null;
-  murState[i].pText  = '';
-  murState[i].pHuruf = '';
-  if (cell){
-    delete cell.dataset[`score${i}`];
-    delete cell.dataset[`ptext${i}`];
-    delete cell.dataset[`phuruf${i}`];
-  }
-}
-
+        // Jangan prefill nilai
+        $(`#mur${i}-score`).value = '';
+        $(`#mur${i}-predikatBadge`).textContent = '–';
+        murState[i].score  = null;
+        murState[i].pText  = '';
+        murState[i].pHuruf = '';
 
         renderSession(i);
 
@@ -7891,11 +7840,7 @@ if (hasMeaningfulScore) {
     $(`#mur${idx}-ayahFrom`) ?.addEventListener('change', ()=>{ murState[idx].touched = true; onAyahChange(idx);         });
     $(`#mur${idx}-ayahTo`)   ?.addEventListener('change', ()=>{ murState[idx].touched = true; onAyahChange(idx);         });
 
-    $(`#mur${idx}-score`)    ?.addEventListener('input',  ()=>{ 
-  // Cukup update predikat & dataset sesi-ini; JANGAN renderSession (agar sesi lain tidak ikut tersinkron)
-  setPredikatUI(idx);
-});
-
+    $(`#mur${idx}-score`)    ?.addEventListener('input',  ()=>{ setPredikatUI(idx); renderSession(idx); });
   }
   function bindSession(idx){ fillAllBases(idx); }
 
@@ -8020,28 +7965,10 @@ if (hasMeaningfulScore) {
           setPages(cell, ses.pagesStr, `pf${i}`, `pt${i}`);
           if (ses.jFrom != null && ses.jFrom !== '') cell.dataset[`jfrom${i}`] = String(ses.jFrom); else delete cell.dataset[`jfrom${i}`];
           if (ses.jTo   != null && ses.jTo   !== '') cell.dataset[`jto${i}`]   = String(ses.jTo);   else delete cell.dataset[`jto${i}`];
-
-		  if (ses.juzVal != null && String(ses.juzVal) !== '') {
-  		  cell.dataset[`juz${i}`] = num(ses.juzVal).toFixed(2);
-		  } else {
-  		  delete cell.dataset[`juz${i}`];
-		  }
-			
-          const hasMeaningfulScore = (
-  ses.score != null && String(ses.score) !== '' &&
-  !(Number(ses.score) === 0 && !ses.pText && !ses.pHuruf)
-);
-
-if (hasMeaningfulScore) {
-  cell.dataset[`score${i}`] = String(ses.score);
-  cell.dataset[`ptext${i}`] = String(ses.pText ?? '');
-  cell.dataset[`phuruf${i}`]= String(ses.pHuruf ?? '');
-} else {
-  delete cell.dataset[`score${i}`];
-  delete cell.dataset[`ptext${i}`];
-  delete cell.dataset[`phuruf${i}`];
-}
-
+          cell.dataset[`juz${i}`] = num(ses.juzVal || 0).toFixed(2);
+          if (ses.score  != null) cell.dataset[`score${i}`] = String(ses.score); else delete cell.dataset[`score${i}`];
+          if (ses.pText  != null) cell.dataset[`ptext${i}`] = String(ses.pText); else delete cell.dataset[`ptext${i}`];
+          if (ses.pHuruf != null) cell.dataset[`phuruf${i}`]= String(ses.pHuruf); else delete cell.dataset[`phuruf${i}`];
         }
       });
     }
@@ -8102,14 +8029,14 @@ if (hasMeaningfulScore) {
     };
 
     // Bersihkan dataset sel + set wipe marker
-    if (currentRowEl){
-  const cell = currentRowEl.querySelector('.murajaah-cell');
+    if (window.currentRowEl){
+      const cell = window.currentRowEl.querySelector('.murajaah-cell');
       if (cell){
         ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf','juz'].forEach(k=>{
           const key = `${k}${idx}`; if (key in cell.dataset) delete cell.dataset[key];
         });
-        wipeAdd(currentRowEl, idx);
-  cell.dataset[`wipe${idx}`] = '1';
+        wipeAdd(window.currentRowEl, idx);
+        cell.dataset[`wipe${idx}`] = '1';
       }
     }
 
@@ -8118,8 +8045,8 @@ if (hasMeaningfulScore) {
     const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     const gEl = document.querySelector('#mur-totalJuzAll');
     if (gEl) gEl.textContent = g.toFixed(2);
-    if (currentRowEl){
-  const cell = currentRowEl.querySelector('.murajaah-cell');
+    if (window.currentRowEl){
+      const cell = window.currentRowEl.querySelector('.murajaah-cell');
       const valEl = cell?.querySelector('.mur-val');
       if (cell) cell.dataset.murtotal = g.toFixed(2);
       if (valEl) valEl.textContent = `${g.toFixed(2)} juz`;
@@ -8205,7 +8132,7 @@ if (hasMeaningfulScore) {
     else { s=s.replace(/,/g,""); }
     const n = parseFloat(s); return Number.isFinite(n)?n:0;
   };
-  const BATAS = {1: 5, 2: 10, 3: 15, 4: 20, 5: 30};
+  const BATAS = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 13: 13, 14: 14, 15: 15, 16: 16, 17: 17, 18: 18, 19: 19, 20: 20, 21: 21, 22: 22, 23: 23, 24: 24, 25: 25, 26: 26, 27: 27, 28: 28, 29: 29, 30: 30};
   const LS_KEY = k => `murRange:${k}`;
 
   function getSantriTable(){
