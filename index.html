@@ -7519,7 +7519,8 @@ function juzOfAyah(s,a){
           cell.dataset[`sf${i}`]=st.sF||''; cell.dataset[`af${i}`]=st.aF||'';
           cell.dataset[`st${i}`]=st.sT||''; cell.dataset[`at${i}`]=st.aT||'';
           cell.dataset[`pf${i}`]=st.pFrom||''; cell.dataset[`pt${i}`]=st.pTo||'';
-          cell.dataset[`jfrom${i}`]=st.jFrom||''; cell.dataset[`jto${i}`]=st.JTo||st.jTo||'';
+          cell.dataset[`jfrom${i}`] = (st.jFrom ?? '');
+  		  cell.dataset[`jto${i}`]   = (st.jTo   ?? '');
           cell.dataset[`juz${i}`]=(st.total||0).toFixed(2);
           if(st.score!=null){ cell.dataset[`score${i}`]=String(st.score); cell.dataset[`ptext${i}`]=st.pText||''; cell.dataset[`phuruf${i}`]=st.pHuruf||''; }
         });
@@ -7797,12 +7798,40 @@ function juzOfAyah(s,a){
         $(`#mur${i}-juzFrom`).value = jf!==undefined ? String(jf) : '';
         $(`#mur${i}-juzTo`).value   = jt!==undefined ? String(jt) : '';
 
-        // Jangan prefill nilai
-        $(`#mur${i}-score`).value = '';
-        $(`#mur${i}-predikatBadge`).textContent = '–';
-        murState[i].score  = null;
-        murState[i].pText  = '';
-        murState[i].pHuruf = '';
+        // PREFILL NILAI JIKA ADA (dataset → record); kosong hanya bila benar2 tidak ada
+const scFrom   = pickNonEmpty(ds[`score${i}`], fromRec(i,'score'));
+const pTextFrm = pickNonEmpty(ds[`ptext${i}`], fromRec(i,'pText'));
+const pHurFrm  = pickNonEmpty(ds[`phuruf${i}`], fromRec(i,'pHuruf'));
+
+if (scFrom != null && String(scFrom) !== '') {
+  const sc = Math.max(0, Math.min(100, parseInt(scFrom,10) || 0));
+  $(`#mur${i}-score`).value = String(sc);
+
+  // pasang badge predikat
+  const pred = getPredikat(sc);
+  // pakai data server jika ada, fallback ke hitungan lokal
+  const pText  = (pTextFrm ?? pred.text) || '';
+  const pHuruf = (pHurFrm  ?? pred.huruf) || '';
+
+  $(`#mur${i}-predikatBadge`).textContent = `${pText} (${pHuruf})`;
+
+  // sinkron ke state & dataset cell
+  murState[i].score  = sc;
+  murState[i].pText  = pText;
+  murState[i].pHuruf = pHuruf;
+
+  if (cell){
+    cell.dataset[`score${i}`] = String(sc);
+    cell.dataset[`ptext${i}`] = pText;
+    cell.dataset[`phuruf${i}`]= pHuruf;
+  }
+} else {
+  $(`#mur${i}-score`).value = '';
+  $(`#mur${i}-predikatBadge`).textContent = '–';
+  murState[i].score  = null;
+  murState[i].pText  = '';
+  murState[i].pHuruf = '';
+}
 
         renderSession(i);
 
