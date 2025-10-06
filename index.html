@@ -7684,7 +7684,7 @@ function juzOfAyah(s,a){
       $(`#mur${i}-score`).value = '';
       $(`#mur${i}-predikatBadge`).textContent = '–';
       $(`#mur${i}-pagesHint`).textContent = '';
-      $(`#mur${i}-totalJuz`).textContent = '0.00';
+      $(`#mur${i}-totalJuz`).textContent = '';
       murState[i] = {
         touched:false, sF:null,aF:null,sT:null,aT:null,
         pFrom:'', pTo:'', jFrom:null, jTo:null,
@@ -7754,7 +7754,7 @@ function juzOfAyah(s,a){
         $(`#mur${i}-score`).value = '';
         $(`#mur${i}-predikatBadge`).textContent = '–';
         $(`#mur${i}-pagesHint`).textContent = '';
-        $(`#mur${i}-totalJuz`).textContent = '0.00';
+        $(`#mur${i}-totalJuz`).textContent = '';
         murState[i] = { touched:false, sF:null,aF:null,sT:null,aT:null, pFrom:'',pTo:'', jFrom:null,jTo:null, total:0, score:null, pText:'', pHuruf:'' };
         return;
       }
@@ -7988,7 +7988,13 @@ if (scFrom != null && String(scFrom) !== '') {
           setPages(cell, ses.pagesStr, `pf${i}`, `pt${i}`);
           if (ses.jFrom != null && ses.jFrom !== '') cell.dataset[`jfrom${i}`] = String(ses.jFrom); else delete cell.dataset[`jfrom${i}`];
           if (ses.jTo   != null && ses.jTo   !== '') cell.dataset[`jto${i}`]   = String(ses.jTo);   else delete cell.dataset[`jto${i}`];
-          cell.dataset[`juz${i}`] = num(ses.juzVal || 0).toFixed(2);
+
+		  if (ses.juzVal != null && String(ses.juzVal) !== '') {
+  		  cell.dataset[`juz${i}`] = num(ses.juzVal).toFixed(2);
+		  } else {
+  		  delete cell.dataset[`juz${i}`];
+		  }
+			
           if (ses.score  != null) cell.dataset[`score${i}`] = String(ses.score); else delete cell.dataset[`score${i}`];
           if (ses.pText  != null) cell.dataset[`ptext${i}`] = String(ses.pText); else delete cell.dataset[`ptext${i}`];
           if (ses.pHuruf != null) cell.dataset[`phuruf${i}`]= String(ses.pHuruf); else delete cell.dataset[`phuruf${i}`];
