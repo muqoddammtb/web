@@ -7593,20 +7593,20 @@ $(`#mur${idx}-totalJuz`).textContent='';
     if(currentRowEl){
       const cell=currentRowEl.querySelector('.murajaah-cell'); if(cell){
         cell.dataset.murtotal=String(grand.toFixed(2));
-        [1,2,3].forEach(i=>{
-          const st=murState[i]||{};
-          cell.dataset[`sf${i}`]=st.sF||''; cell.dataset[`af${i}`]=st.aF||'';
-          cell.dataset[`st${i}`]=st.sT||''; cell.dataset[`at${i}`]=st.aT||'';
-          cell.dataset[`pf${i}`]=st.pFrom||''; cell.dataset[`pt${i}`]=st.pTo||'';
-          cell.dataset[`jfrom${i}`] = (st.jFrom ?? ''); 
-			cell.dataset[`jto${i}`]   = (st.jTo   ?? '');
-
-			// Tulis juz{i} hanya kalau range lengkap; kalau tidak, hapus supaya tidak jadi "0.00" default.
-			if (st.sF && st.aF && st.sT && st.aT) {
-  			cell.dataset[`juz${i}`] = (st.total || 0).toFixed(2);
-			} else {
-  			delete cell.dataset[`juz${i}`];
-			}
+        // ...
+// Tulis juz{i} hanya jika range lengkap;
+// kalau tidak lengkap, JANGAN hapus marker wipe.
+const wiped = (cell.dataset[`wipe${i}`] === '1') || wipeHas(currentRowEl, i);
+if (st.sF && st.aF && st.sT && st.aT) {
+  cell.dataset[`juz${i}`] = (st.total || 0).toFixed(2);
+} else {
+  if (wiped) {
+    // pertahankan sebagai 0.00 agar server paham sesi ini di-wipe
+    cell.dataset[`juz${i}`] = '0.00';
+  } else {
+    delete cell.dataset[`juz${i}`];
+  }
+}
 
 			// Skor tetap hanya saat ada nilai
 			if (st.score != null){
@@ -8137,7 +8137,15 @@ if (hasMeaningfulScore) {
     });
     $('#mur-save')?.addEventListener('click', async()=>{
       try{
-        [1,2,3].forEach(renderSession);
+        renderSession(idx);
+const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
+document.querySelector('#mur-totalJuzAll')?.textContent = g.toFixed(2);
+if (currentRowEl){
+  const cell = currentRowEl.querySelector('.murajaah-cell');
+  cell && (cell.dataset.murtotal = g.toFixed(2));
+  const valEl = cell?.querySelector('.mur-val');
+  if (valEl) valEl.textContent = `${g.toFixed(2)} juz`;
+}
         if(typeof window.simpanDataMutabaah==='function'){
           await window.simpanDataMutabaah($('#mur-save'));
           await refreshMurFromServer();
@@ -8192,7 +8200,15 @@ cell.dataset[`wipe${idx}`] = '1';
     }
 
     // Rekap total
-    [1,2,3].forEach(renderSession);
+    renderSession(idx);
+const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
+document.querySelector('#mur-totalJuzAll')?.textContent = g.toFixed(2);
+if (currentRowEl){
+  const cell = currentRowEl.querySelector('.murajaah-cell');
+  cell && (cell.dataset.murtotal = g.toFixed(2));
+  const valEl = cell?.querySelector('.mur-val');
+  if (valEl) valEl.textContent = `${g.toFixed(2)} juz`;
+}
     const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     const gEl = document.querySelector('#mur-totalJuzAll');
     if (gEl) gEl.textContent = g.toFixed(2);
