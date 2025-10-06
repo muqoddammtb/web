@@ -7424,9 +7424,8 @@ function juzOfAyah(s,a){
       murState[idx].score  = null;
       murState[idx].pText  = '';
       murState[idx].pHuruf = '';
-      const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+      if (currentRowEl){
+        const cell = currentRowEl.querySelector('.murajaah-cell');
         if (cell){
           delete cell.dataset[`score${idx}`];
           delete cell.dataset[`ptext${idx}`];
@@ -7443,9 +7442,8 @@ function juzOfAyah(s,a){
     murState[idx].pText  = p.text;
     murState[idx].pHuruf = p.huruf;
 
-   		const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+    if (currentRowEl){
+      const cell=currentRowEl.querySelector('.murajaah-cell');
       if (cell){
         cell.dataset[`score${idx}`] = String(sc);
         cell.dataset[`ptext${idx}`] = p.text;
@@ -7478,9 +7476,8 @@ function juzOfAyah(s,a){
       total:0, score:null, pText:'', pHuruf:''
     };
 
-    	const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+    if (currentRowEl){
+      const cell = currentRowEl.querySelector('.murajaah-cell');
       if (cell){
         delete cell.dataset[`sf${idx}`];
         delete cell.dataset[`af${idx}`];
@@ -7493,7 +7490,7 @@ function juzOfAyah(s,a){
         delete cell.dataset[`score${idx}`];
         delete cell.dataset[`ptext${idx}`];
         delete cell.dataset[`phuruf${idx}`];
-        cell.dataset[`juz${idx}`] = '0';
+        cell.dataset[`juz${idx}`] = '0.00';
       }
     }
 
@@ -7502,9 +7499,8 @@ function juzOfAyah(s,a){
     $('#mur-t3').textContent=(murState[3]?.total||0).toFixed(2);
     const grand=(murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     $('#mur-totalJuzAll').textContent=grand.toFixed(2);
-    	const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+    if (currentRowEl){
+      const cell=currentRowEl.querySelector('.murajaah-cell');
       if (cell){
         cell.dataset.murtotal = grand.toFixed(2);
         const valEl=cell.querySelector('.mur-val');
@@ -7623,15 +7619,28 @@ $(`#mur${idx}-totalJuz`).textContent='';
   			delete cell.dataset[`phuruf${i}`];
 			}
         });
-        const valEl=cell.querySelector('.mur-val'); if(valEl) valEl.textContent = grand.toFixed(2)+' juz';
+        const valEl = cell.querySelector('.mur-val');
+
+const allEmpty = [1,2,3].every(i=>{
+  const st = murState[i]||{};
+  const noRange = !(st.sF && st.aF && st.sT && st.aT);
+  const noScore = (st.score == null);
+  const zeroTot = (Number(st.total||0) === 0);
+  return noRange && noScore && zeroTot;
+});
+
+if (valEl) valEl.textContent = allEmpty ? '—' : (grand.toFixed(2) + ' juz');
+cell.dataset.murtotal = allEmpty ? '' : grand.toFixed(2);
+
       }
     }
 
     // --- jika user sudah mengisi data sesi -> hapus wipe-token supaya server boleh isi ulang
     try{
       const hasData = !!(murState[idx]?.sF && murState[idx]?.aF && murState[idx]?.sT && murState[idx]?.aT);
-      if (_row){
-        const cell = _row.querySelector('.murajaah-cell');
+      if (hasData && currentRowEl) {
+        wipeClear(currentRowEl, idx);
+        const cell = currentRowEl.querySelector('.murajaah-cell');
         if (cell) delete cell.dataset[`wipe${idx}`];
       }
     }catch(_){}
@@ -8084,13 +8093,12 @@ if (hasMeaningfulScore) {
         for (let i = 1; i <= 3; i++) {
           // Jika ada wipe untuk sesi ini: kosongkan & skip data server
           if (wipeHas(tr, i)){
-            ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf'].forEach(k=>{
-              const key = `${k}${i}`; if (key in cell.dataset) delete cell.dataset[key];
-            });
-            cell.dataset[`juz${i}`] = '0.00';
-            cell.dataset[`wipe${i}`] = '1';
-            continue;
-          }
+            ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf','juz'].forEach(k=>{
+  const key = `${k}${i}`; if (key in cell.dataset) delete cell.dataset[key];
+});
+cell.dataset[`wipe${i}`] = '1';
+continue;
+
 
           const ses = getSessionFrom(rec, i);
           setSA(cell, ses.fromStr, `sf${i}`, `af${i}`);
@@ -8154,7 +8162,7 @@ if (hasMeaningfulScore) {
   function afterTableRendered(){ ensureMurColumn(); refreshMurFromServer(); }
 
   // ============ RESET: kosong total (0.00) + lindungi dari data server ============
-  async function serverSafeReset(idx, rowEl){
+  async function serverSafeReset(idx){
     try{ if (!window.dataReady) await ensureMap(); }catch(_){}
     const sel = q => document.querySelector(q);
 
@@ -8180,17 +8188,15 @@ if (hasMeaningfulScore) {
     };
 
     // Bersihkan dataset sel + set wipe marker
-    	const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+    if (currentRowEl){
+  const cell = currentRowEl.querySelector('.murajaah-cell');
       if (cell){
-        ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf'].forEach(k=>{
+        ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf', 'juz'].forEach(k=>{
   const key = `${k}${idx}`; if (key in cell.dataset) delete cell.dataset[key];
 });
-// penting: tandai sesi ini sebagai WIPED dengan juz=0 (jangan hapus!)
-cell.dataset[`juz${idx}`] = '0';
 
-wipeAdd(_row, idx);
+
+wipeAdd(currentRowEl, idx);
 cell.dataset[`wipe${idx}`] = '1';
       }
     }
@@ -8200,12 +8206,12 @@ cell.dataset[`wipe${idx}`] = '1';
     const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     const gEl = document.querySelector('#mur-totalJuzAll');
     if (gEl) gEl.textContent = g.toFixed(2);
-   		const _row = rowEl || currentRowEl || null;
-		if (_row){
-		const cell = _row.querySelector('.murajaah-cell');
+    if (currentRowEl){
+  const cell = currentRowEl.querySelector('.murajaah-cell');
       const valEl = cell?.querySelector('.mur-val');
-      if (cell) cell.dataset.murtotal = g.toFixed(2);
-      if (valEl) valEl.textContent = `${g.toFixed(2)} juz`;
+      const allWiped = [1,2,3].every(i => wipeHas(currentRowEl, i));
+if (cell) cell.dataset.murtotal = allWiped ? '' : g.toFixed(2);
+if (valEl) valEl.textContent = allWiped ? '—' : `${g.toFixed(2)} juz`;
     }
 
     const statusEl = document.querySelector('#mur-save-status');
@@ -8269,20 +8275,6 @@ cell.dataset[`wipe${idx}`] = '1';
     ensureResetButtons();
   })();
 })();
-
-function bindRowScopedResetButtons(row){
-  for (let i=1;i<=3;i++){
-    const btn = document.getElementById(`mur${i}-totalJuz-reset`);
-    if (!btn) continue;
-    // putuskan handler lama (kalau ada), lalu pasang yang baru
-    btn.replaceWith(btn.cloneNode(true));
-  }
-  for (let i=1;i<=3;i++){
-    const btn = document.getElementById(`mur${i}-totalJuz-reset`);
-    if (!btn) continue;
-    btn.addEventListener('click', ()=> serverSafeReset(i, row));
-  }
-}	
 </script>
 
 <script>
