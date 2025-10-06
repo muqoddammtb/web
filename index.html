@@ -7798,24 +7798,27 @@ function juzOfAyah(s,a){
         $(`#mur${i}-juzFrom`).value = jf!==undefined ? String(jf) : '';
         $(`#mur${i}-juzTo`).value   = jt!==undefined ? String(jt) : '';
 
-        // PREFILL NILAI JIKA ADA (dataset → record); kosong hanya bila benar2 tidak ada
+        // PREFILL NILAI JIKA ADA (dataset → record); ANTI-DEFAULT-0
 const scFrom   = pickNonEmpty(ds[`score${i}`], fromRec(i,'score'));
 const pTextFrm = pickNonEmpty(ds[`ptext${i}`], fromRec(i,'pText'));
 const pHurFrm  = pickNonEmpty(ds[`phuruf${i}`], fromRec(i,'pHuruf'));
 
-if (scFrom != null && String(scFrom) !== '') {
+// Anggap score=0 itu "kosong" KECUALI server memang kirim predikat (pText/pHuruf)
+const hasMeaningfulScore =
+  scFrom != null &&
+  String(scFrom) !== '' &&
+  !(Number(scFrom) === 0 && !pTextFrm && !pHurFrm);
+
+if (hasMeaningfulScore) {
   const sc = Math.max(0, Math.min(100, parseInt(scFrom,10) || 0));
   $(`#mur${i}-score`).value = String(sc);
 
-  // pasang badge predikat
   const pred = getPredikat(sc);
-  // pakai data server jika ada, fallback ke hitungan lokal
   const pText  = (pTextFrm ?? pred.text) || '';
   const pHuruf = (pHurFrm  ?? pred.huruf) || '';
 
   $(`#mur${i}-predikatBadge`).textContent = `${pText} (${pHuruf})`;
 
-  // sinkron ke state & dataset cell
   murState[i].score  = sc;
   murState[i].pText  = pText;
   murState[i].pHuruf = pHuruf;
@@ -7826,12 +7829,21 @@ if (scFrom != null && String(scFrom) !== '') {
     cell.dataset[`phuruf${i}`]= pHuruf;
   }
 } else {
+  // kosongkan UI & state
   $(`#mur${i}-score`).value = '';
   $(`#mur${i}-predikatBadge`).textContent = '–';
   murState[i].score  = null;
   murState[i].pText  = '';
   murState[i].pHuruf = '';
+
+  // pastikan dataset tidak menyisakan 0
+  if (cell){
+    delete cell.dataset[`score${i}`];
+    delete cell.dataset[`ptext${i}`];
+    delete cell.dataset[`phuruf${i}`];
+  }
 }
+
 
         renderSession(i);
 
@@ -7995,9 +8007,15 @@ if (scFrom != null && String(scFrom) !== '') {
           if (ses.jFrom != null && ses.jFrom !== '') cell.dataset[`jfrom${i}`] = String(ses.jFrom); else delete cell.dataset[`jfrom${i}`];
           if (ses.jTo   != null && ses.jTo   !== '') cell.dataset[`jto${i}`]   = String(ses.jTo);   else delete cell.dataset[`jto${i}`];
           cell.dataset[`juz${i}`] = num(ses.juzVal || 0).toFixed(2);
-          if (ses.score  != null) cell.dataset[`score${i}`] = String(ses.score); else delete cell.dataset[`score${i}`];
-          if (ses.pText  != null) cell.dataset[`ptext${i}`] = String(ses.pText); else delete cell.dataset[`ptext${i}`];
-          if (ses.pHuruf != null) cell.dataset[`phuruf${i}`]= String(ses.pHuruf); else delete cell.dataset[`phuruf${i}`];
+          // Anggap score=0 itu kosong KECUALI server juga kirim pText/pHuruf
+const sc  = (ses.score != null ? Number(ses.score) : null);
+const pt  = (ses.pText  != null ? String(ses.pText)  : null);
+const ph  = (ses.pHuruf != null ? String(ses.pHuruf) : null);
+const keepScore = (sc != null && !(sc === 0 && !pt && !ph));
+
+if (keepScore) cell.dataset[`score${i}`] = String(sc); else delete cell.dataset[`score${i}`];
+if (pt != null) cell.dataset[`ptext${i}`]   = pt;      else delete cell.dataset[`ptext${i}`];
+if (ph != null) cell.dataset[`phuruf${i}`]  = ph;      else delete cell.dataset[`phuruf${i}`];
         }
       });
     }
