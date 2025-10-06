@@ -7424,8 +7424,9 @@ function juzOfAyah(s,a){
       murState[idx].score  = null;
       murState[idx].pText  = '';
       murState[idx].pHuruf = '';
-      if (currentRowEl){
-        const cell = currentRowEl.querySelector('.murajaah-cell');
+      const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
         if (cell){
           delete cell.dataset[`score${idx}`];
           delete cell.dataset[`ptext${idx}`];
@@ -7442,8 +7443,9 @@ function juzOfAyah(s,a){
     murState[idx].pText  = p.text;
     murState[idx].pHuruf = p.huruf;
 
-    if (currentRowEl){
-      const cell=currentRowEl.querySelector('.murajaah-cell');
+   		const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
       if (cell){
         cell.dataset[`score${idx}`] = String(sc);
         cell.dataset[`ptext${idx}`] = p.text;
@@ -7476,8 +7478,9 @@ function juzOfAyah(s,a){
       total:0, score:null, pText:'', pHuruf:''
     };
 
-    if (currentRowEl){
-      const cell = currentRowEl.querySelector('.murajaah-cell');
+    	const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
       if (cell){
         delete cell.dataset[`sf${idx}`];
         delete cell.dataset[`af${idx}`];
@@ -7490,7 +7493,7 @@ function juzOfAyah(s,a){
         delete cell.dataset[`score${idx}`];
         delete cell.dataset[`ptext${idx}`];
         delete cell.dataset[`phuruf${idx}`];
-        cell.dataset[`juz${idx}`] = '0.00';
+        cell.dataset[`juz${idx}`] = '0';
       }
     }
 
@@ -7499,8 +7502,9 @@ function juzOfAyah(s,a){
     $('#mur-t3').textContent=(murState[3]?.total||0).toFixed(2);
     const grand=(murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     $('#mur-totalJuzAll').textContent=grand.toFixed(2);
-    if (currentRowEl){
-      const cell=currentRowEl.querySelector('.murajaah-cell');
+    	const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
       if (cell){
         cell.dataset.murtotal = grand.toFixed(2);
         const valEl=cell.querySelector('.mur-val');
@@ -7626,9 +7630,8 @@ $(`#mur${idx}-totalJuz`).textContent='';
     // --- jika user sudah mengisi data sesi -> hapus wipe-token supaya server boleh isi ulang
     try{
       const hasData = !!(murState[idx]?.sF && murState[idx]?.aF && murState[idx]?.sT && murState[idx]?.aT);
-      if (hasData && currentRowEl) {
-        wipeClear(currentRowEl, idx);
-        const cell = currentRowEl.querySelector('.murajaah-cell');
+      if (_row){
+        const cell = _row.querySelector('.murajaah-cell');
         if (cell) delete cell.dataset[`wipe${idx}`];
       }
     }catch(_){}
@@ -8151,7 +8154,7 @@ if (hasMeaningfulScore) {
   function afterTableRendered(){ ensureMurColumn(); refreshMurFromServer(); }
 
   // ============ RESET: kosong total (0.00) + lindungi dari data server ============
-  async function serverSafeReset(idx){
+  async function serverSafeReset(idx, rowEl){
     try{ if (!window.dataReady) await ensureMap(); }catch(_){}
     const sel = q => document.querySelector(q);
 
@@ -8177,8 +8180,9 @@ if (hasMeaningfulScore) {
     };
 
     // Bersihkan dataset sel + set wipe marker
-    if (currentRowEl){
-  const cell = currentRowEl.querySelector('.murajaah-cell');
+    	const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
       if (cell){
         ['sf','af','st','at','pf','pt','jfrom','jto','score','ptext','phuruf'].forEach(k=>{
   const key = `${k}${idx}`; if (key in cell.dataset) delete cell.dataset[key];
@@ -8186,7 +8190,7 @@ if (hasMeaningfulScore) {
 // penting: tandai sesi ini sebagai WIPED dengan juz=0 (jangan hapus!)
 cell.dataset[`juz${idx}`] = '0';
 
-wipeAdd(currentRowEl, idx);
+wipeAdd(_row, idx);
 cell.dataset[`wipe${idx}`] = '1';
       }
     }
@@ -8196,8 +8200,9 @@ cell.dataset[`wipe${idx}`] = '1';
     const g = (murState[1]?.total||0)+(murState[2]?.total||0)+(murState[3]?.total||0);
     const gEl = document.querySelector('#mur-totalJuzAll');
     if (gEl) gEl.textContent = g.toFixed(2);
-    if (currentRowEl){
-  const cell = currentRowEl.querySelector('.murajaah-cell');
+   		const _row = rowEl || currentRowEl || null;
+		if (_row){
+		const cell = _row.querySelector('.murajaah-cell');
       const valEl = cell?.querySelector('.mur-val');
       if (cell) cell.dataset.murtotal = g.toFixed(2);
       if (valEl) valEl.textContent = `${g.toFixed(2)} juz`;
@@ -8264,6 +8269,20 @@ cell.dataset[`wipe${idx}`] = '1';
     ensureResetButtons();
   })();
 })();
+
+function bindRowScopedResetButtons(row){
+  for (let i=1;i<=3;i++){
+    const btn = document.getElementById(`mur${i}-totalJuz-reset`);
+    if (!btn) continue;
+    // putuskan handler lama (kalau ada), lalu pasang yang baru
+    btn.replaceWith(btn.cloneNode(true));
+  }
+  for (let i=1;i<=3;i++){
+    const btn = document.getElementById(`mur${i}-totalJuz-reset`);
+    if (!btn) continue;
+    btn.addEventListener('click', ()=> serverSafeReset(i, row));
+  }
+}	
 </script>
 
 <script>
