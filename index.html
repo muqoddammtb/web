@@ -3420,7 +3420,7 @@ async function loadSantriData() {
 
       const hasAny = !!usedSet && usedSet.size > 0;
       const isLast = latestMap && latestMap.surah === sid;
-      const mark   = isLast ? "★ " : (hasAny ? "✓ " : "");
+      const mark   = isLast ? "🟢 " : (hasAny ? "✓ " : "");
       const sel    = selectedId && selectedId == sid ? ' selected' : '';
       html += `<option value="${sid}"${sel}>${mark}${s.nama}</option>`;
     }
@@ -3428,7 +3428,7 @@ async function loadSantriData() {
   }
   window.__makeSurahOptions = makeSurahOptions;
 
-  // AYAT dropdown bertanda ✓/★ — fallback aman bila Tahap 2 belum terpasang
+  // AYAT dropdown bertanda ✓/🟢 — fallback aman bila Tahap 2 belum terpasang
   function fillAyatOptionsMarked(selectEl, surahId, selectedAyat = "") {
     if (typeof window.fillAyatOptionsMarked === "function") {
       window.fillAyatOptionsMarked(selectEl, surahId, selectedAyat);
@@ -4030,7 +4030,7 @@ function fillAyatOptionsMarked(selectEl, surahId, selectedAyat = "") {
 
     let label = iStr;
     if (isUsed)   label = `✓ ${label}`;   // tetap beri tanda, meski ditampilkan
-    if (isLatest) label = `${label} ★`;
+    if (isLatest) label = `${label} 🟢`;
 
     const opt = document.createElement("option");
     opt.value = iStr;
