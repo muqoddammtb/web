@@ -1351,7 +1351,7 @@ async function buatUserNIS() {
 			<th>Juz</th>
             <th>Total Juz</th>
             <th>Nilai</th>
-            <th id="totalAllJuzHeader" style="cursor:pointer; text-decoration:underline;">Setting THMS</th>
+            <th id="totalAllJuzHeader" style="cursor:pointer; text-decoration:underline;">Setting Target</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -4794,30 +4794,26 @@ document.getElementById('mur-save')?.addEventListener('click', function(){ simpa
   // === Helper Kelas/Kelompok ===
 function buildKelasKelompokLine(kelas, kelasEl) {
   const kelasNum = (String(kelas||'').match(/(\d+)/)?.[1]) || (kelas || '-');
-  const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Ust. Tukimin",
-  kelas_022526: "Ust. Dicky Miswardi",
-  kelas_032526: "Ust. Jundullah BA",
-  kelas_042526: "Ust. Abdullah",
-  kelas_052526: "Ust. Ro'uuf Noor Huda Su'udin",
-  kelas_062526: "Ust. Salahuddin Santoaji P",
-  kelas_072526: "Ust. Hammam Ahmed Saleh",
-  kelas_082526: "Ust. Alif Rafiqul",
-  kelas_092526: "Ust. Ali Wardana",
-  kelas_102526: "Ust. Mullah Muhammad Umar",
-  kelas_112526: "Ust. Akhsani Tawqim",
-  kelas_122526: "Ust. Ikhsan Nur Kamidin",
-  kelas_132526: "Ust. Abdul Haq",
-  kelas_142526: "Ust. Abdullah Al Guspari",
-  kelas_152526: "Ust. Abdullah Rafi",
-  kelas_162526: "Ust. Fajriul Ihsan",
-  kelas_172526: "Ust. Idris",
-  kelas_182526: "Ust. Muhammad Athayya Mumtaz",
-  kelas_192526: "Ust. M. Hanan Azili",
-  kelas_202526: "Ust. Muhammad Rama Miayasin",
-  kelas_212526: "Ust. Nur Afiq",
-  kelas_222526: "Ust. Raditya Baswara Raharjo",
-  kelas_232526: "Ust. Rafie Zahran Kurniawan",
-  kelas_242526: "Ust. Shidiq Hasan Khan"};
+  const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Ustadzah Lylika Tri Canda Medita",
+  kelas_022526: "Ustadzah Dewi Khumariah Rhasya",
+  kelas_032526: "Ustadzah Nadia Nurfadhilah",
+  kelas_042526: "Ustadzah Eliya",
+  kelas_052526: "Ustadzah Rima Karimah",
+  kelas_062526: "Ustadzah Rishana Hanifa",
+  kelas_072526: "Ustadzah Karimah",
+  kelas_082526: "Ustadzah Nurfadhilah Kamaliyah",
+  kelas_092526: "Ustadzah Umi Muthoharoh",
+  kelas_102526: "Ustadzah Sofi Agnia",
+  kelas_112526: "Ustadzah Ririn Nurlaily",
+  kelas_122526: "Ustadzah Zihan Audrian Hidayat",
+  kelas_132526: "Ustadzah Nopia",
+  kelas_142526: "Ustadz Imam Tolhah",
+  kelas_152526: "Ustadz Fahri Aziz",
+  kelas_162526: "Ustadz Saeful Munawar Rizal",
+  kelas_172526: "Ustadz Aflah Musoddaq",
+  kelas_182526: "Ustadz Saif Abdullah",
+  kelas_192526: "Ustadz Muhammad Farhan Hidayat",
+  kelas_202526: "Ustadz Farrid Ilallah"};
     let kelompok = custom[kelas] || "";
     if (!kelompok) {
       const optText = kelasEl?.options?.[kelasEl.selectedIndex]?.text?.trim() || "";
