@@ -2901,14 +2901,14 @@ logoutBtn.addEventListener("click", () => {
   }, 500);
 });
 
-<!-- ============ ABSENSI FLEX – UTIL & RENDER (global, ringan) ============ -->
+<!-- ============ ABSENSI FLEX – UTIL & RENDER (global, ringan) ============ --> 
 (function(){
   // Konfigurasi global yang bisa dioverride sebelum loadSantriData jalan
   window.ABS_FLEX_CFG = window.ABS_FLEX_CFG || {
     statuses: ["hadir","izin","sakit","alpha"],
-    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 4), // default 2 unit per status (hadir1..2, dst)
-    defaultTarget: 4,                                   // default denominator
-    maxTarget: 4,                                       // denominator 1..6
+    perStatus: Number(window.ABS_FLEX_PER_STATUS ?? 6), // default 6 unit per status (hadir1..6, dst)
+    defaultTarget: 6,                                   // default denominator
+    maxTarget: 6,                                       // denominator 1..6
     labels: null                                        // {hadir:[...], izin:[...], ...] (opsional)
   };
 
@@ -2931,25 +2931,18 @@ logoutBtn.addEventListener("click", () => {
 
   function defaultLabel(st, i){
     // Dukungan sesi lengkap + pertahankan perilaku lama untuk perStatus=2 (Pagi/Sore)
-    const Title   = st.charAt(0).toUpperCase() + st.slice(1);
-    const idx     = i - 1;
-    const per     = ABS_FLEX_CFG.perStatus|0;
-    const sesiAll = ["Sesi"];
+    const Title = st.charAt(0).toUpperCase() + st.slice(1);
+    const per   = ABS_FLEX_CFG.perStatus|0;
 
-    // Legacy: jika tetap 2 sesi, pertahankan Pagi/Sore
     if (per === 2){
-      const sesi = (idx === 0) ? "Pagi" : "Sore";
-      return `${Title} ${sesi} ${i}`;
+      const map2 = ["Pagi","Sore"];
+      return `${Title} ${map2[i-1] || `Sesi ${i}`}`;
     }
 
-    // Jika lebih dari 2 sesi, gunakan daftar sesi lengkap
-    if (per > 2){
-      const sesi = sesiAll[idx] || `Sesi ${i}`;
-      return `${Title} ${sesi} ${i}`;
-    }
-
-    // Fallback (perStatus=1)
-    return `${Title} ${i}`;
+    // Penamaan 3..6 slot umum
+    const map6 = ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"];
+    const sesi = (per >= 3 && per <= 6) ? (map6[i-1] || `Sesi ${i}`) : `Sesi ${i}`;
+    return `${Title} ${sesi}`;
   }
 
   function labelFor(st, i){
@@ -3033,7 +3026,7 @@ logoutBtn.addEventListener("click", () => {
             <div style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
               ${Array.from({length:perStatus},(_,i)=>`
                 <label style="display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px;border:1px solid #f1f5f9;min-height:32px;min-width:0;">
-                  <input type="checkbox" data-abskey="${st}${i+1}" style="width:16px;height:16px;">
+                  <input type="checkbox" data-abskey="${st}${i+1}" data-sesi="${i+1}" style="width:16px;height:16px;">
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">${labelFor(st, i+1)}</span>
                 </label>
               `).join("")}
@@ -3056,13 +3049,33 @@ logoutBtn.addEventListener("click", () => {
       items = keys.map(k => ({ key:k, checked:false }));
     }
 
+    // Kunci eksklusif per sesi (UI: disable saudara sesi jika salah satu dicentang)
+    function lockSessionExclusivity() {
+      const bySesi = new Map();
+      boxes.forEach(b => {
+        const sesi = b.dataset.sesi;
+        if (!bySesi.has(sesi)) bySesi.set(sesi, []);
+        bySesi.get(sesi).push(b);
+      });
+      bySesi.forEach(group => {
+        const active = group.find(b => b.checked);
+        if (active) {
+          group.forEach(b => { if (b !== active) b.disabled = true; });
+        } else {
+          group.forEach(b => { b.disabled = false; });
+        }
+      });
+    }
+
     function writeUI(){
       boxes.forEach(b => {
         const k = String(b.dataset.abskey).toLowerCase();
         const it = items.find(x => x.key === k);
         b.checked = !!it?.checked;
       });
+      lockSessionExclusivity();
     }
+
     function recolor(p){
       percentEl.style.background = p>=80 ? '#dcfce7' : p>=50 ? '#fff7ed' : '#fee2e2';
       percentEl.style.borderColor= p>=80 ? '#86efac' : p>=50 ? '#fdba74' : '#fca5a5';
@@ -3087,9 +3100,20 @@ logoutBtn.addEventListener("click", () => {
         return;
       }
       if (e.target.matches('input[type="checkbox"][data-abskey]')) {
-        const k = String(e.target.dataset.abskey).toLowerCase();
+        const k = String(e.target.dataset.abskey).toLowerCase(); // contoh: "izin3"
+        const sesiNum = String(e.target.dataset.sesi);           // contoh: "3"
         const it = items.find(x => x.key === k);
         if (it) it.checked = !!e.target.checked;
+
+        // State guard: pastikan sesi yang sama hanya 1 status aktif
+        if (e.target.checked) {
+          items = items.map(x => {
+            const isSameSession = x.key !== k && x.key.endsWith(sesiNum);
+            return isSameSession ? {...x, checked:false} : x;
+          });
+        }
+
+        // Batasi total centang global terhadap target
         items = clampToTarget(items, Number(targetEl.value) || ABS_FLEX_CFG.defaultTarget, "lifo");
         writeUI(); recalcExpose();
       }
