@@ -4794,21 +4794,34 @@ document.getElementById('mur-save')?.addEventListener('click', function(){ simpa
   }
 
 // ====== Apakah record harian ini "bermakna" untuk dihitung sebagai 1 hari KBM? ======
-// ====== Apakah record harian ini "bermakna" untuk dihitung sebagai 1 hari KBM? (slot-only) ======
 function _isMeaningfulKBM(rec){
-  // 1) SLOT absensi (btn-absensi-flex): minimal 1 slot tercentang
-  const checked = Number(rec?._slotChecked ?? 0);
-  if (Number.isFinite(checked) && checked > 0) return true;
+  // slot absensi
+  const checked = Number(rec?._slotChecked || 0);
+  if (checked > 0) return true;
 
-  // 2) Fallback legacy (jika belum pakai slot): 1 field absensi/status yang valid
-  //    Catatan: ini masih "input absensi", bukan setoran/mur/halaman/nilai/keterangan.
-  const raw = (rec?.absensi ?? rec?.status ?? '').toString().trim().toLowerCase();
-  if (raw) {
-    const st = (typeof PDF_normStatus === 'function') ? PDF_normStatus(raw) : raw;
-    if (st === 'hadir' || st === 'izin' || st === 'sakit' || st === 'alpha') return true;
-  }
+  // setoran: dari–sampai, total juz/halaman
+  const adaRange = !!(rec?.dari || rec?.dariSetoran) && !!(rec?.sampai || rec?.sampaiSetoran);
+  if (adaRange) return true;
 
-  // 3) Sinyal non-absensi (setoran/murajaah/halaman/nilai/keterangan) TIDAK menghitung KBM
+  const totJuz = Number(rec?.totalJuz ?? rec?.juz ?? rec?.total_juz_num ?? 0);
+  if (totJuz > 0) return true;
+
+  const totHalaman = Number(rec?.totalHalaman ?? rec?.totalPage ?? 0);
+  if (totHalaman > 0) return true;
+
+  // murajaah (server biasanya di `juzmurajaah` / `total_mur_num`)
+  const mur = Number(rec?.juzmurajaah ?? rec?.murajaah ?? rec?.mur_juz ?? rec?.total_mur_num ?? 0);
+  if (mur > 0) return true;
+
+  // nilai / predikat
+  const adaNilai = (rec?.buttonCell && rec.buttonCell.nilai!=null)
+                || (rec?.nilai != null) || (rec?.score != null);
+  if (adaNilai) return true;
+
+  // keterangan non-kosong
+  const ket = (rec?.keterangan ?? '').toString().trim();
+  if (ket) return true;
+
   return false;
 }
 
@@ -5015,25 +5028,6 @@ function buildRosterWhitelist(santriData){
   return allow;
 }
 
-// --- Helper ambil roster santri yang fleksibel (?kelas= ATAU ?kelasId=) ---
-async function fetchSantriFlexible(kelasKey){
-  // coba ?kelas=
-  try{
-    const d = await fetch(`/api/getSantri?kelas=${encodeURIComponent(kelasKey)}&t=${Date.now()}`).then(r=>r.json());
-    if (Array.isArray(d) && d.length) return d;
-    if (d && Array.isArray(d.santri)) return d.santri; // kalau API balikin {santri:[...]}
-  }catch{}
-
-  // fallback ?kelasId=
-  try{
-    const d = await fetch(`/api/getSantri?kelasId=${encodeURIComponent(kelasKey)}&t=${Date.now()}`).then(r=>r.json());
-    if (Array.isArray(d)) return d;
-    if (d && Array.isArray(d.santri)) return d.santri;
-  }catch{}
-
-  return [];
-}	 
-
 // --- D1 helpers (sesuai getAbsensiRange.js yang kamu kirim) ---
 async function d1FetchAbsensi({ kelas, start, end, aggregate=false }) {
   const url = `/api/getAbsensiRange?kelas=${encodeURIComponent(kelas)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}${aggregate ? '&aggregate=1' : ''}&t=${Date.now()}`;
@@ -5088,8 +5082,9 @@ async function collectRekapData(){
   }
 
   // 2) ROSTER
-  // 2) ROSTER (fleksibel)
-let santriData = await fetchSantriFlexible(kelas);
+  const resSantri = await fetch(`/api/getSantri?kelas=${encodeURIComponent(kelas)}&t=${Date.now()}`);
+  let santriData = await resSantri.json().catch(()=>[]);
+  if (!Array.isArray(santriData)) santriData = [];
 
   const allowSet = buildRosterWhitelist(santriData);
   const keyId   = v => (v === 0 || v) ? String(v).trim() : "";
@@ -5157,20 +5152,6 @@ let santriData = await fetchSantriFlexible(kelas);
       })
     : allDataNorm;
 
-	// === HITUNG "keterangan terakhir" per santri di rentang aktif ===
-const _sortedAbsensi = [...(allDataAbsensi||[])].sort((a,b)=>{
-  const ta = String(a?.tanggal||'');
-  const tb = String(b?.tanggal||'');
-  return ta.localeCompare(tb);
-});
-const lastKetMap = new Map();   // key -> last non-empty ket
-for (const it of _sortedAbsensi){
-  const key = (it?.nis && String(it.nis).trim()) || (it?.id && String(it.id).trim());
-  if (!key) continue;
-  const ket = (it?.keterangan ?? it?.note ?? it?.catatan ?? '').toString().trim();
-  if (ket) lastKetMap.set(key, ket); // entri paling akhir = "terakhir"
-}
-	
   // 4) KBM hari unik (HANYA hari bermakna) — pakai dataset yang sama dengan slot
   const kbmDaySet = new Set();
   (allDataAbsensi||[]).forEach(it => {
@@ -5202,28 +5183,6 @@ for (const it of _sortedAbsensi){
     aggMap[k].targetSlots = a.target;
   }
 
-// --- META LIVE ke agregat (semester/jenjang dari roster, keterangan dari absensi terfilter) ---
-for (const k of Object.keys(aggMap)) {
-  const r = aggMap[k];
-
-  // key normalisasi
-  const key = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim()) || '';
-
-  // dari roster (byNis/byId sudah dibuat di atas)
-  const sByNis = key && rosterByNis.get?.(key);
-  const sById  = key && rosterById.get?.(key);
-  const s = sByNis || sById || null;
-
-  if (r.semester == null && s?.semester != null) r.semester = Number(s.semester);
-  if ((r.jenjang == null || r.jenjang === '') && (s?.jenjang ?? s?.level)) {
-    r.jenjang = s.jenjang ?? s.level;
-  }
-
-  // keterangan terakhir dari rentang aktif
-  const liveKet = lastKetMap.get(key);
-  if (liveKet) r.keterangan = liveKet;
-}
-	
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
   const rows = allRows.filter(r => (typeof r.nis === 'string' ? r.nis.trim() !== '' : !!r.nis));
   if (rows.length === 0) throw new Error('Tidak ada data ber-NIS pada rentang tanggal tersebut.');
@@ -5277,8 +5236,9 @@ for (const k of Object.keys(aggMap)) {
         sel.innerHTML = `<option value="">— Pilih santri (ada data) —</option>` +
           arr.map(x => `<option value="${x.key}" data-nama="${(x.nama||'').replace(/"/g,'&quot;')}">${x.nis ? x.nis : x.id} — ${x.nama}</option>`).join('');
       } else {
-        let santriData = await fetchSantriFlexible(kelas);
-
+        const resSantri = await fetch(`/api/getSantri?kelas=${encodeURIComponent(kelas)}&t=${Date.now()}`);
+let santriData = await resSantri.json().catch(() => []);
+if (!Array.isArray(santriData)) santriData = [];   // <<< penting: kalau API balik {error:...}
         const arr = (santriData||[]).map(s => ({ key: (s.nis||s.id||'').toString(), nama: s.nama||'-', nis: s.nis||'', id: s.id||'' }))
                               .filter(x => x.key).sort((a,b)=>a.nama.localeCompare(b.nama,'id'));
         sel.innerHTML = `<option value="">— Pilih santri —</option>` +
@@ -5533,10 +5493,9 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
         const alphaSlots = Number(r.alphaSlots ?? r.alpha ?? 0);
         const targetSlots= Number(r.targetSlots ?? 0);
         const denomSlots = hadirSlots + izinSlots + sakitSlots + alphaSlots;
-		// Utamakan targetSlots agar 1 hadir dari 4 = 25%
-		const hadirPct = (targetSlots > 0)
-  		? Math.round((hadirSlots / targetSlots) * 100)
-  		: (denomSlots > 0 ? Math.round((hadirSlots / denomSlots) * 100) : 0);
+		const hadirPct   = denomSlots > 0
+		? Math.round((hadirSlots / denomSlots) * 100)
+		: (targetSlots > 0 ? Math.round((hadirSlots / targetSlots) * 100) : 0);
 
         return {
           no: String(idx+1),
@@ -5772,8 +5731,9 @@ async function collectRekapDataForClass(kelasKey, startDate, endDate){
   if (!Array.isArray(rawList) || rawList.length === 0) return null;
 
   // 2) ROSTER
-  // 2) ROSTER (fleksibel)
-let santriData = await fetchSantriFlexible(kelasKey);
+  const resSantri = await fetch(`/api/getSantri?kelas=${encodeURIComponent(kelasKey)}&t=${Date.now()}`);
+  let santriData = await resSantri.json().catch(()=>[]);
+  if (!Array.isArray(santriData)) santriData = [];
 
   const allowSet = buildRosterWhitelist(santriData);
   const keyId   = v => (v === 0 || v) ? String(v).trim() : "";
@@ -5840,20 +5800,6 @@ let santriData = await fetchSantriFlexible(kelasKey);
       })
     : allDataNorm;
 
-	// === HITUNG "keterangan terakhir" per santri di rentang aktif ===
-const _sortedAbsensi = [...(allDataAbsensi||[])].sort((a,b)=>{
-  const ta = String(a?.tanggal||'');
-  const tb = String(b?.tanggal||'');
-  return ta.localeCompare(tb);
-});
-const lastKetMap = new Map();
-for (const it of _sortedAbsensi){
-  const key = (it?.nis && String(it.nis).trim()) || (it?.id && String(it.id).trim());
-  if (!key) continue;
-  const ket = (it?.keterangan ?? it?.note ?? it?.catatan ?? '').toString().trim();
-  if (ket) lastKetMap.set(key, ket);
-}
-	
   // 4) KBM unik (HANYA hari bermakna) — pakai dataset yang sudah difilter
   const kbmDaySet = new Set();
   (allDataAbsensi||[]).forEach(it => {
@@ -5883,24 +5829,6 @@ for (const it of _sortedAbsensi){
     aggMap[k].alphaSlots  = a.alpha;
     aggMap[k].targetSlots = a.target;
   }
-
-  // --- META LIVE ke agregat (semester/jenjang roster, keterangan dari absensi terfilter) ---
-for (const k of Object.keys(aggMap)) {
-  const r = aggMap[k];
-  const key = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim()) || '';
-
-  const sByNis = key && rosterByNis.get?.(key);
-  const sById  = key && rosterById.get?.(key);
-  const s = sByNis || sById || null;
-
-  if (r.semester == null && s?.semester != null) r.semester = Number(s.semester);
-  if ((r.jenjang == null || r.jenjang === '') && (s?.jenjang ?? s?.level)) {
-    r.jenjang = s.jenjang ?? s.level;
-  }
-
-  const liveKet = lastKetMap.get(key);
-  if (liveKet) r.keterangan = liveKet;
-}
 
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
   const rows = allRows.filter(r => (typeof r.nis === 'string' ? r.nis.trim() !== '' : !!r.nis));
@@ -6052,10 +5980,9 @@ for (const k of Object.keys(aggMap)) {
           const alphaSlots = Number(r.alphaSlots ?? r.alpha ?? 0);
           const targetSlots= Number(r.targetSlots ?? 0);
           const denomSlots = hadirSlots + izinSlots + sakitSlots + alphaSlots;
-		  const hadirPct = (targetSlots > 0)
-  		  ? Math.round((hadirSlots / targetSlots) * 100)
-  	  	  : (denomSlots > 0 ? Math.round((hadirSlots / denomSlots) * 100) : 0);
-
+		  const hadirPct   = denomSlots > 0
+		  ? Math.round((hadirSlots / denomSlots) * 100)
+		  : (targetSlots > 0 ? Math.round((hadirSlots / targetSlots) * 100) : 0);
 
           return {
             no: String(idx+1),
@@ -6815,14 +6742,6 @@ const usingAbsensiRange = (absSrc === 'absensi');
 const effStart = usingAbsensiRange ? absS : startDate;
 const effEnd   = usingAbsensiRange ? absE : endDate;
 
-// === Keterangan terakhir (per-santri, rentang efektif)
-const sortedMine = [...mine].sort((a,b)=> String(a?.tanggal||'').localeCompare(String(b?.tanggal||'')));
-let keteranganLive = '-';
-for (const it of sortedMine) {
-  const ket = (it?.keterangan ?? it?.note ?? it?.catatan ?? '').toString().trim();
-  if (ket) keteranganLive = ket; // overwrite sampai entri terakhir
-}
-
     let mine = allDataNorm.filter(it => (String(it.nis||it.id||'') === key));
 if (usingAbsensiRange) {
   mine = mine.filter(it => {
@@ -6838,6 +6757,10 @@ if (usingAbsensiRange) {
                         ?? (mine.find(it => it.jenjang!=null)?.jenjang)
                         ?? '-';
     const jenjangSantriLabel = jenjangLabel(jenjangSantri);
+
+    const keteranganSantri = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.keterangan)
+                        ?? (mine.find(it => it.keterangan!=null)?.keterangan)
+                        ?? '-';
 
     // ==== Kelompokkan per tanggal (slot-based) ====
     const byDate = new Map();
@@ -6948,17 +6871,17 @@ if (usingAbsensiRange) {
 
     // Persentase kehadiran total (slot-based)
     const denomTotal = totH + totI + totS + totA;
-	const hadirPctTotal = (totalTargetSlots > 0)
-    ? Math.round((totH / totalTargetSlots) * 100)
-    : (denomTotal > 0 ? Math.round((totH / denomTotal) * 100) : 0);
+	const hadirPctTotal = denomTotal > 0
+	? Math.round((totH / denomTotal) * 100)
+	: (totalTargetSlots > 0 ? Math.round((totH / totalTargetSlots) * 100) : 0);
 
     // ==== Baris harian (slot-based) ====
     const tableRows = dayRows.map((d, idx) => {
       const targetSlots = Number(d.targetSlots || 0);
 	  const denomDay = d.cnt.hadir + d.cnt.izin + d.cnt.sakit + d.cnt.alpha;
-  	  const hadirPct = (targetSlots > 0)
-  	  ? Math.round(100 * d.cnt.hadir / targetSlots)
-  	  : (denomDay > 0 ? Math.round(100 * d.cnt.hadir / denomDay) : 0);
+	  const hadirPct = denomDay > 0
+	  ? Math.round(100 * d.cnt.hadir / denomDay)
+	  : (targetSlots > 0 ? Math.round(100 * d.cnt.hadir / targetSlots) : 0);
 
       const hasNilaiHarian = d.nilaiCount > 0;
 		const nilaiHarian = hasNilaiHarian ? (d.nilaiSum/d.nilaiCount) : null;
@@ -6974,7 +6897,7 @@ if (usingAbsensiRange) {
         nama: namaSantri,
         sem: semesterSantri ?? (agg?.semester ?? '-'),
         jenjang: jenjangSantriLabel,
-        ket: keteranganLive,
+        ket: keteranganSantri,
         h: d.cnt.hadir, a: d.cnt.alpha, s: d.cnt.sakit, i: d.cnt.izin,
         hadirPct: `${hadirPct}%`,
         setoran: PDF_joinSAsegmentsNamaMerged(d.sa),
@@ -7017,7 +6940,7 @@ const juzTotalTxt  = (usingAbsensiRange || !agg)
       nama: 'REKAP',
       sem: semesterSantri ?? (agg?.semester ?? '-'),
       jenjang: jenjangSantriLabel,
-      ket: keteranganLive,
+      ket: keteranganSantri,
       h: totH, a: totA, s: totS, i: totI,
       hadirPct: `${hadirPctTotal}%`,
       setoran: setoranTotal,
@@ -7255,6 +7178,8 @@ window._pdfSantriDownload = pdfSantriDownload;
 // ============================
 // B. DOWNLOAD PDF
 // ============================
+
+
 
 
 // ============================
