@@ -10,58 +10,47 @@ export async function onRequest({ request, env }) {
     return new Response(null, { status: 204, headers: CORS });
   }
 
-  const url = new URL(request.url);
-  // <- sekarang dukung ?kelas= ATAU ?kelasId=
-  const kelasParam = url.searchParams.get("kelas") || url.searchParams.get("kelasId");
+  const url   = new URL(request.url);
+  const kelas = url.searchParams.get("kelas");
 
-  if (!kelasParam) {
-    return new Response(JSON.stringify({ error: "Parameter 'kelas' atau 'kelasId' wajib diisi" }), {
+  if (!kelas) {
+    return new Response(JSON.stringify({ error: "Parameter 'kelas' wajib diisi" }), {
       status: 400,
       headers: { "Content-Type": "application/json", ...CORS },
     });
   }
 
-  // Kandidat lokasi file roster di repo GitHub kamu
-  const candidates = [
-    // root repo: <kelas>.json  (sesuai kode awalmu)
-    `https://api.github.com/repos/muqoddammtb/server/contents/${encodeURIComponent(kelasParam)}.json`,
-
-    // Jika kamu simpan di subfolder, tinggal buka komentar baris ini:
-    // `https://api.github.com/repos/muqoddammtb/server/contents/kelas/${encodeURIComponent(kelasParam)}.json`,
-  ];
+  // NOTE: path ini sesuai kode asalmu (root repo: <kelas>.json).
+  // Kalau file-nya ada di folder lain, ubah saja path-nya.
+  const apiUrl = `https://api.github.com/repos/muqoddammtb/server/contents/${encodeURIComponent(kelas)}.json`;
 
   try {
-    let lastErr = null;
+    const gh = await fetch(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        Accept: "application/vnd.github.v3+json",
+        "User-Agent": "cf-pages-functions",
+      },
+      cf: { cacheTtl: 0, cacheEverything: false },
+    });
 
-    for (const apiUrl of candidates) {
-      try {
-        const gh = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-            Accept: "application/vnd.github.v3+json",
-            "User-Agent": "cf-pages-functions",
-          },
-          cf: { cacheTtl: 0, cacheEverything: false },
-        });
-
-        if (!gh.ok) { lastErr = new Error(`GitHub ${gh.status}`); continue; }
-
-        const result = await gh.json();       // { content: "base64", ... }
-        const decoded = atob(result.content); // base64 -> JSON string
-
-        // Kembalikan isi JSON mentah (array atau object) agar frontendmu tetap kompatibel
-        return new Response(decoded, {
-          status: 200,
-          headers: { "Content-Type": "application/json; charset=utf-8", ...CORS },
-        });
-      } catch (e) {
-        lastErr = e;
-      }
+    if (!gh.ok) {
+      return new Response(JSON.stringify({ error: `Gagal fetch data: ${gh.status}` }), {
+        status: gh.status,
+        headers: { "Content-Type": "application/json", ...CORS },
+      });
     }
 
-    throw lastErr || new Error("Gagal fetch roster dari semua kandidat path");
+    const result  = await gh.json();        // { content: "base64", ... }
+    const decoded = atob(result.content);   // base64 -> string JSON
+
+    return new Response(decoded, {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...CORS },
+    });
+
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err.message || err) }), {
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...CORS },
     });
