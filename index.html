@@ -5214,13 +5214,14 @@ for (const k of Object.keys(aggMap)) {
   const sById  = key && rosterById.get?.(key);
   const s = sByNis || sById || null;
 
-  if (s?.semester != null) r.semester = Number(s.semester);
-  if (s?.jenjang ?? s?.level) r.jenjang = s.jenjang ?? s.level;
+  if (r.semester == null && s?.semester != null) r.semester = Number(s.semester);
+  if ((r.jenjang == null || r.jenjang === '') && (s?.jenjang ?? s?.level)) {
+    r.jenjang = s.jenjang ?? s.level;
+  }
 
   // keterangan terakhir dari rentang aktif
   const liveKet = lastKetMap.get(key);
   if (liveKet) r.keterangan = liveKet;
-  else if (s?.keterangan) r.keterangan = s.keterangan;
 }
 	
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
@@ -5892,12 +5893,13 @@ for (const k of Object.keys(aggMap)) {
   const sById  = key && rosterById.get?.(key);
   const s = sByNis || sById || null;
 
-  if (s?.semester != null) r.semester = Number(s.semester);
-  if (s?.jenjang ?? s?.level) r.jenjang = s.jenjang ?? s.level;
+  if (r.semester == null && s?.semester != null) r.semester = Number(s.semester);
+  if ((r.jenjang == null || r.jenjang === '') && (s?.jenjang ?? s?.level)) {
+    r.jenjang = s.jenjang ?? s.level;
+  }
 
   const liveKet = lastKetMap.get(key);
   if (liveKet) r.keterangan = liveKet;
-  else if (s?.keterangan) r.keterangan = s.keterangan;
 }
 
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
@@ -6803,32 +6805,33 @@ async function pdfSantriDownload(){
 
     const { startDate, endDate, kelasLine, rows: aggRows, allDataNorm } = await collectRekapData();
 
-	// === Range efektif (pakai Absensi jika toggle aktif) ===
-const { start: absS, end: absE, source: absSrc } =
-  (typeof getAbsensiRangeOrDefault === 'function')
-    ? getAbsensiRangeOrDefault()
-    : { start: startDate, end: endDate, source: 'global' };
+    // === Range efektif (pakai Absensi jika toggle aktif) ===
+    const { start: absS, end: absE, source: absSrc } =
+      (typeof getAbsensiRangeOrDefault === 'function')
+        ? getAbsensiRangeOrDefault()
+        : { start: startDate, end: endDate, source: 'global' };
 
-const usingAbsensiRange = (absSrc === 'absensi');
-const effStart = usingAbsensiRange ? absS : startDate;
-const effEnd   = usingAbsensiRange ? absE : endDate;
+    const usingAbsensiRange = (absSrc === 'absensi');
+    const effStart = usingAbsensiRange ? absS : startDate;
+    const effEnd   = usingAbsensiRange ? absE : endDate;
 
-// === Keterangan terakhir (per-santri, rentang efektif)
-const sortedMine = [...mine].sort((a,b)=> String(a?.tanggal||'').localeCompare(String(b?.tanggal||'')));
-let keteranganLive = '-';
-for (const it of sortedMine) {
-  const ket = (it?.keterangan ?? it?.note ?? it?.catatan ?? '').toString().trim();
-  if (ket) keteranganLive = ket; // overwrite sampai entri terakhir
-}
-
+    // === Data milik santri terpilih (DEFINISIKAN "mine" DULU), lalu filter range efektif
     let mine = allDataNorm.filter(it => (String(it.nis||it.id||'') === key));
-if (usingAbsensiRange) {
-  mine = mine.filter(it => {
-    const t = String(it?.tanggal || '');
-    return t >= effStart && t <= effEnd;
-  });
-}
+    if (usingAbsensiRange) {
+      mine = mine.filter(it => {
+        const t = String(it?.tanggal || '');
+        return t >= effStart && t <= effEnd;
+      });
+    }
     if (!mine.length) throw new Error('Tidak ada data untuk santri terpilih pada rentang tanggal.');
+
+    // === Keterangan terakhir (non-empty) dari rentang efektif
+    const sortedMine = [...mine].sort((a,b)=> String(a?.tanggal||'').localeCompare(String(b?.tanggal||'')));
+    let keteranganLive = '-';
+    for (const it of sortedMine) {
+      const ket = (it?.keterangan ?? it?.note ?? it?.catatan ?? '').toString().trim();
+      if (ket) keteranganLive = ket; // entri paling akhir = "terakhir"
+    }
 
     const namaSantri = selectedNama || (mine.find(it => it.nama)?.nama) || '-';
     const semesterSantri = (mine.find(it => it.semester!=null)?.semester) ?? null;
@@ -6836,6 +6839,8 @@ if (usingAbsensiRange) {
                         ?? (mine.find(it => it.jenjang!=null)?.jenjang)
                         ?? '-';
     const jenjangSantriLabel = jenjangLabel(jenjangSantri);
+
+    // ==== Kelompokkan per tanggal (slot-based) ====
 
     // ==== Kelompokkan per tanggal (slot-based) ====
     const byDate = new Map();
