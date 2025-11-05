@@ -5085,64 +5085,59 @@ async function collectRekapData(){
   const rosterByName = byNameMap(santriData, s => s);
 
   // 3) Normalisasi raw + injeksi slot
-const allDataNorm = rawList
-  .filter(r => {
-    const id  = keyId(r?.id ?? "");
-    const nis = keyNis(r?.nis ?? "");
-    if (nis && allowSet.has(nis)) return true;
-    if (id  && allowSet.has(id))  return true;
-    const nmK = keyName(r?.nama);
-    const guessNis = nmK && rosterByName.get(nmK)?.nis ? keyNis(rosterByName.get(nmK).nis) : "";
-    const guessId  = nmK && rosterByName.get(nmK)?.id  ? keyId(rosterByName.get(nmK).id)  : "";
-    return (guessNis && allowSet.has(guessNis)) || (guessId && allowSet.has(guessId));
-  })
-  .map(r => {
-    // --- normalisasi id/nis/nama (tetap seperti semula) ---
-    let id   = keyId(r?.id ?? "");
-    let nis  = keyNis(r?.nis ?? "");
-    const nmK = keyName(r?.nama);
-    if (!nis && id && rosterById.get(id)?.nis) nis = keyNis(rosterById.get(id).nis);
-    if (!nis && nmK && rosterByName.get(nmK)?.nis) nis = keyNis(rosterByName.get(nmK).nis);
-
-    let nama = r?.nama;
-    if (!nama && nis && rosterByNis.get(nis)?.nama) nama = rosterByNis.get(nis).nama;
-    if (!nama && id  && rosterById.get(id)?.nama)  nama = rosterById.get(id).nama;
-    if (!id && nis && rosterByNis.get(nis)?.id) id = keyId(rosterByNis.get(nis).id);
-
-    // --- ROSTER-FIRST: ambil dari roster dulu, baru fallback record harian ---
-    const roster = nis ? rosterByNis.get(nis) : (id ? rosterById.get(id) : null);
-
-    let semester =
-      (roster?.semester != null) ? Number(roster.semester)
-    : (r?.semester != null)      ? Number(r.semester)
-    : null;
-
-    let jenjang =
-      (roster?.jenjang != null)  ? roster.jenjang
-    : (r?.jenjang != null)       ? r.jenjang
-    : null;
-
-    let keterangan =
-      (roster?.keterangan != null) ? roster.keterangan
-    : (r?.keterangan != null)      ? r.keterangan
-    : null;
-
-    const slot = _slotMetricsFromRecord(r);
-    return {
-      ...r, ...slot, id, nis, nama, semester, jenjang, keterangan,
-      tanggal: r?.tanggal ? String(r.tanggal).slice(0,10) : null
-    };
-  });
-
-// === [FIX] Terapkan toggle Rentang Absensi untuk perhitungan SLOT & KBM ===
-const { start: absS, end: absE, source: absSrc } = getAbsensiRangeOrDefault();
-const useAbsensiRange = (absSrc === 'absensi');
-const allDataAbsensi = useAbsensiRange
-  ? (allDataNorm || []).filter(it => {
-      const t = String(it?.tanggal || '');
-      return t >= absS && t <= absE;
+  const allDataNorm = rawList
+    .filter(r => {
+      const id  = keyId(r?.id ?? "");
+      const nis = keyNis(r?.nis ?? "");
+      if (nis && allowSet.has(nis)) return true;
+      if (id  && allowSet.has(id))  return true;
+      const nmK = keyName(r?.nama);
+      const guessNis = nmK && rosterByName.get(nmK)?.nis ? keyNis(rosterByName.get(nmK).nis) : "";
+      const guessId  = nmK && rosterByName.get(nmK)?.id  ? keyId(rosterByName.get(nmK).id)  : "";
+      return (guessNis && allowSet.has(guessNis)) || (guessId && allowSet.has(guessId));
     })
-  : allDataNorm;
+    .map(r => {
+      let id   = keyId(r?.id ?? "");
+      let nis  = keyNis(r?.nis ?? "");
+      const nmK = keyName(r?.nama);
+      if (!nis && id && rosterById.get(id)?.nis) nis = keyNis(rosterById.get(id).nis);
+      if (!nis && nmK && rosterByName.get(nmK)?.nis) nis = keyNis(rosterByName.get(nmK).nis);
+
+      let nama = r?.nama;
+      if (!nama && nis && rosterByNis.get(nis)?.nama) nama = rosterByNis.get(nis).nama;
+      if (!nama && id  && rosterById.get(id)?.nama)  nama = rosterById.get(id).nama;
+      if (!id && nis && rosterByNis.get(nis)?.id) id = keyId(rosterByNis.get(nis).id);
+
+      let semester = (r?.semester != null) ? Number(r.semester) : null;
+      if (semester == null) {
+        if (nis && rosterByNis.get(nis)?.semester != null) semester = Number(rosterByNis.get(nis).semester);
+        else if (id && rosterById.get(id)?.semester != null) semester = Number(rosterById.get(id).semester);
+      }
+
+      let jenjang = r?.jenjang ?? null;
+      if (!jenjang && nis && rosterByNis.get(nis)?.jenjang) jenjang = rosterByNis.get(nis).jenjang;
+      if (!jenjang && id  && rosterById.get(id)?.jenjang)  jenjang = rosterById.get(id).jenjang;
+
+      let keterangan = r?.keterangan ?? null;
+      if (!keterangan && nis && rosterByNis.get(nis)?.keterangan) keterangan = rosterByNis.get(nis).keterangan;
+      if (!keterangan && id  && rosterById.get(id)?.keterangan)  keterangan = rosterById.get(id).keterangan;
+
+      const slot = _slotMetricsFromRecord(r);
+      return {
+        ...r, ...slot, id, nis, nama, semester, jenjang, keterangan,
+        tanggal: r?.tanggal ? String(r.tanggal).slice(0,10) : null
+      };
+    });
+
+  // === [FIX] Terapkan toggle Rentang Absensi untuk perhitungan SLOT & KBM ===
+  const { start: absS, end: absE, source: absSrc } = getAbsensiRangeOrDefault();
+  const useAbsensiRange = (absSrc === 'absensi');
+  const allDataAbsensi = useAbsensiRange
+    ? (allDataNorm || []).filter(it => {
+        const t = String(it?.tanggal || '');
+        return t >= absS && t <= absE;
+      })
+    : allDataNorm;
 	
   // 4) KBM hari unik (HANYA hari bermakna) — pakai dataset yang sama dengan slot
   const kbmDaySet = new Set();
@@ -5495,7 +5490,7 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
           nis: r.nis || r.id || '-',
           nama: r.nama || '-',
           sem: r.semester ?? '-',
-          jenjang: jenjangLabel(r.jenjang ?? ''),
+          jenjang: String(r.jenjang ?? ''),
           ket: r.keterangan ?? '-',
           h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
           hadirPct: `${hadirPct}%`,
@@ -5740,64 +5735,58 @@ async function collectRekapDataForClass(kelasKey, startDate, endDate){
   const rosterByName = byNameMap(santriData, s => s);
 
   // 3) Normalisasi raw + injeksi slot
-const allDataNorm = rawList
-  .filter(r => {
-    const id  = keyId(r?.id ?? "");
-    const nis = keyNis(r?.nis ?? "");
-    if (nis && allowSet.has(nis)) return true;
-    if (id  && allowSet.has(id))  return true;
-    const nmK = keyName(r?.nama);
-    const guessNis = nmK && rosterByName.get(nmK)?.nis ? keyNis(rosterByName.get(nmK).nis) : "";
-    const guessId  = nmK && rosterByName.get(nmK)?.id  ? keyId(rosterByName.get(nmK).id)  : "";
-    return (guessNis && allowSet.has(guessNis)) || (guessId && allowSet.has(guessId));
-  })
-  .map(r => {
-    // --- normalisasi id/nis/nama (tetap seperti semula) ---
-    let id   = keyId(r?.id ?? "");
-    let nis  = keyNis(r?.nis ?? "");
-    const nmK = keyName(r?.nama);
-    if (!nis && id && rosterById.get(id)?.nis) nis = keyNis(rosterById.get(id).nis);
-    if (!nis && nmK && rosterByName.get(nmK)?.nis) nis = keyNis(rosterByName.get(nmK).nis);
-
-    let nama = r?.nama;
-    if (!nama && nis && rosterByNis.get(nis)?.nama) nama = rosterByNis.get(nis).nama;
-    if (!nama && id  && rosterById.get(id)?.nama)  nama = rosterById.get(id).nama;
-    if (!id && nis && rosterByNis.get(nis)?.id) id = keyId(rosterByNis.get(nis).id);
-
-    // --- ROSTER-FIRST: ambil dari roster dulu, baru fallback record harian ---
-    const roster = nis ? rosterByNis.get(nis) : (id ? rosterById.get(id) : null);
-
-    let semester =
-      (roster?.semester != null) ? Number(roster.semester)
-    : (r?.semester != null)      ? Number(r.semester)
-    : null;
-
-    let jenjang =
-      (roster?.jenjang != null)  ? roster.jenjang
-    : (r?.jenjang != null)       ? r.jenjang
-    : null;
-
-    let keterangan =
-      (roster?.keterangan != null) ? roster.keterangan
-    : (r?.keterangan != null)      ? r.keterangan
-    : null;
-
-    const slot = _slotMetricsFromRecord(r);
-    return {
-      ...r, ...slot, id, nis, nama, semester, jenjang, keterangan,
-      tanggal: r?.tanggal ? String(r.tanggal).slice(0,10) : null
-    };
-  });
-
-// === [Terapkan toggle Rentang Absensi] untuk SLOT & KBM
-const { start: absS, end: absE, source: absSrc } = getAbsensiRangeOrDefault();
-const useAbsensiRange = (absSrc === 'absensi');
-const allDataAbsensi = useAbsensiRange
-  ? (allDataNorm || []).filter(it => {
-      const t = String(it?.tanggal || '');
-      return t >= absS && t <= absE;
+  const allDataNorm = rawList
+    .filter(r => {
+      const id  = keyId(r?.id ?? "");  const nis = keyNis(r?.nis ?? "");
+      if (nis && allowSet.has(nis)) return true;
+      if (id  && allowSet.has(id))  return true;
+      const nmK = keyName(r?.nama);
+      const guessNis = nmK && rosterByName.get(nmK)?.nis ? keyNis(rosterByName.get(nmK).nis) : "";
+      const guessId  = nmK && rosterByName.get(nmK)?.id  ? keyId(rosterByName.get(nmK).id)  : "";
+      return (guessNis && allowSet.has(guessNis)) || (guessId && allowSet.has(guessId));
     })
-  : allDataNorm;
+    .map(r => {
+      let id   = keyId(r?.id ?? "");
+      let nis  = keyNis(r?.nis ?? "");
+      const nmK = keyName(r?.nama);
+      if (!nis && id && rosterById.get(id)?.nis) nis = keyNis(rosterById.get(id).nis);
+      if (!nis && nmK && rosterByName.get(nmK)?.nis) nis = keyNis(rosterByName.get(nmK).nis);
+
+      let nama = r?.nama;
+      if (!nama && nis && rosterByNis.get(nis)?.nama) nama = rosterByNis.get(nis).nama;
+      if (!nama && id  && rosterById.get(id)?.nama)  nama = rosterById.get(id).nama;
+      if (!id && nis && rosterByNis.get(nis)?.id) id = keyId(rosterByNis.get(nis).id);
+
+      let semester = (r?.semester != null) ? Number(r.semester) : null;
+      if (semester == null) {
+        if (nis && rosterByNis.get(nis)?.semester != null) semester = Number(rosterByNis.get(nis).semester);
+        else if (id && rosterById.get(id)?.semester != null) semester = Number(rosterById.get(id).semester);
+      }
+
+      let jenjang = r?.jenjang ?? null;
+      if (!jenjang && nis && rosterByNis.get(nis)?.jenjang) jenjang = rosterByNis.get(nis).jenjang;
+      if (!jenjang && id  && rosterById.get(id)?.jenjang)  jenjang = rosterById.get(id).jenjang;
+
+      let keterangan = r?.keterangan ?? null;
+      if (!keterangan && nis && rosterByNis.get(nis)?.keterangan) keterangan = rosterByNis.get(nis).keterangan;
+      if (!keterangan && id  && rosterById.get(id)?.keterangan)  keterangan = rosterById.get(id).keterangan;
+
+      const slot = _slotMetricsFromRecord(r);
+      return {
+        ...r, ...slot, id, nis, nama, semester, jenjang, keterangan,
+        tanggal: r?.tanggal ? String(r.tanggal).slice(0,10) : null
+      };
+    });
+
+  // === [Terapkan toggle Rentang Absensi] untuk SLOT & KBM
+  const { start: absS, end: absE, source: absSrc } = getAbsensiRangeOrDefault();
+  const useAbsensiRange = (absSrc === 'absensi');
+  const allDataAbsensi = useAbsensiRange
+    ? (allDataNorm || []).filter(it => {
+        const t = String(it?.tanggal || '');
+        return t >= absS && t <= absE;
+      })
+    : allDataNorm;
 
   // 4) KBM unik (HANYA hari bermakna) — pakai dataset yang sudah difilter
   const kbmDaySet = new Set();
@@ -5989,7 +5978,7 @@ const allDataAbsensi = useAbsensiRange
             nis: r.nis || r.id || '-',
             nama: r.nama || '-',
             sem: r.semester ?? '-',
-            jenjang: jenjangLabel(r.jenjang ?? ''),
+            jenjang: String(r.jenjang ?? ''),
             ket: r.keterangan ?? '-',
             h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
             hadirPct: `${hadirPct}%`,
@@ -6753,11 +6742,11 @@ if (usingAbsensiRange) {
 
     const namaSantri = selectedNama || (mine.find(it => it.nama)?.nama) || '-';
     const semesterSantri = (mine.find(it => it.semester!=null)?.semester) ?? null;
-    const jenjangSantri  = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.jenjang)
-                        ?? (mine.find(it => it.jenjang!=null)?.jenjang)
-                        ?? '-';
+    const jenjangSantri  = (aggRows.find(... )?.jenjang)
+					  ?? (mine.find(it => it.jenjang!=null)?.jenjang)
+					  ?? '-';
+	
     const jenjangSantriLabel = jenjangLabel(jenjangSantri);
-
     const keteranganSantri = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.keterangan)
                         ?? (mine.find(it => it.keterangan!=null)?.keterangan)
                         ?? '-';
@@ -6896,7 +6885,7 @@ if (usingAbsensiRange) {
         nis: key,
         nama: namaSantri,
         sem: semesterSantri ?? (agg?.semester ?? '-'),
-        jenjang: jenjangSantriLabel,
+        jenjang: String(jenjangSantri),
         ket: keteranganSantri,
         h: d.cnt.hadir, a: d.cnt.alpha, s: d.cnt.sakit, i: d.cnt.izin,
         hadirPct: `${hadirPct}%`,
