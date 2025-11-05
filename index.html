@@ -5480,9 +5480,10 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
         const alphaSlots = Number(r.alphaSlots ?? r.alpha ?? 0);
         const targetSlots= Number(r.targetSlots ?? 0);
         const denomSlots = hadirSlots + izinSlots + sakitSlots + alphaSlots;
-		const hadirPct   = denomSlots > 0
-		? Math.round((hadirSlots / denomSlots) * 100)
-		: (targetSlots > 0 ? Math.round((hadirSlots / targetSlots) * 100) : 0);
+		// Utamakan targetSlots agar 1 hadir dari 4 = 25%
+		const hadirPct = (targetSlots > 0)
+  		? Math.round((hadirSlots / targetSlots) * 100)
+  		: (denomSlots > 0 ? Math.round((hadirSlots / denomSlots) * 100) : 0);
 
         return {
           no: String(idx+1),
@@ -5967,9 +5968,10 @@ async function collectRekapDataForClass(kelasKey, startDate, endDate){
           const alphaSlots = Number(r.alphaSlots ?? r.alpha ?? 0);
           const targetSlots= Number(r.targetSlots ?? 0);
           const denomSlots = hadirSlots + izinSlots + sakitSlots + alphaSlots;
-		  const hadirPct   = denomSlots > 0
-		  ? Math.round((hadirSlots / denomSlots) * 100)
-		  : (targetSlots > 0 ? Math.round((hadirSlots / targetSlots) * 100) : 0);
+		  const hadirPct = (targetSlots > 0)
+  		  ? Math.round((hadirSlots / targetSlots) * 100)
+  	  	  : (denomSlots > 0 ? Math.round((hadirSlots / denomSlots) * 100) : 0);
+
 
           return {
             no: String(idx+1),
@@ -6858,17 +6860,17 @@ if (usingAbsensiRange) {
 
     // Persentase kehadiran total (slot-based)
     const denomTotal = totH + totI + totS + totA;
-	const hadirPctTotal = denomTotal > 0
-	? Math.round((totH / denomTotal) * 100)
-	: (totalTargetSlots > 0 ? Math.round((totH / totalTargetSlots) * 100) : 0);
+	const hadirPctTotal = (totalTargetSlots > 0)
+    ? Math.round((totH / totalTargetSlots) * 100)
+    : (denomTotal > 0 ? Math.round((totH / denomTotal) * 100) : 0);
 
     // ==== Baris harian (slot-based) ====
     const tableRows = dayRows.map((d, idx) => {
       const targetSlots = Number(d.targetSlots || 0);
 	  const denomDay = d.cnt.hadir + d.cnt.izin + d.cnt.sakit + d.cnt.alpha;
-	  const hadirPct = denomDay > 0
-	  ? Math.round(100 * d.cnt.hadir / denomDay)
-	  : (targetSlots > 0 ? Math.round(100 * d.cnt.hadir / targetSlots) : 0);
+  	  const hadirPct = (targetSlots > 0)
+  	  ? Math.round(100 * d.cnt.hadir / targetSlots)
+  	  : (denomDay > 0 ? Math.round(100 * d.cnt.hadir / denomDay) : 0);
 
       const hasNilaiHarian = d.nilaiCount > 0;
 		const nilaiHarian = hasNilaiHarian ? (d.nilaiSum/d.nilaiCount) : null;
