@@ -6745,8 +6745,6 @@ if (usingAbsensiRange) {
     const jenjangSantri  = (aggRows.find(... )?.jenjang)
 					  ?? (mine.find(it => it.jenjang!=null)?.jenjang)
 					  ?? '-';
-	
-    const jenjangSantriLabel = jenjangLabel(jenjangSantri);
     const keteranganSantri = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.keterangan)
                         ?? (mine.find(it => it.keterangan!=null)?.keterangan)
                         ?? '-';
