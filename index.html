@@ -5495,7 +5495,7 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
           nis: r.nis || r.id || '-',
           nama: r.nama || '-',
           sem: r.semester ?? '-',
-          jenjang: jenjangLabel(r.jenjang ?? ''),
+          jenjang: String(r.jenjang ?? ''),
           ket: r.keterangan ?? '-',
           h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
           hadirPct: `${hadirPct}%`,
@@ -5989,7 +5989,7 @@ const allDataAbsensi = useAbsensiRange
             nis: r.nis || r.id || '-',
             nama: r.nama || '-',
             sem: r.semester ?? '-',
-            jenjang: jenjangLabel(r.jenjang ?? ''),
+            jenjang: String(r.jenjang ?? ''),
             ket: r.keterangan ?? '-',
             h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
             hadirPct: `${hadirPct}%`,
@@ -6753,9 +6753,9 @@ if (usingAbsensiRange) {
 
     const namaSantri = selectedNama || (mine.find(it => it.nama)?.nama) || '-';
     const semesterSantri = (mine.find(it => it.semester!=null)?.semester) ?? null;
-    const jenjangSantri  = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.jenjang)
-                        ?? (mine.find(it => it.jenjang!=null)?.jenjang)
-                        ?? '-';
+    const jenjangSantri  = (aggRows.find(... )?.jenjang)
+						?? (mine.find(it => it.jenjang!=null)?.jenjang)
+					    ?? '-';
     const jenjangSantriLabel = jenjangLabel(jenjangSantri);
 
     const keteranganSantri = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.keterangan)
@@ -6896,7 +6896,7 @@ if (usingAbsensiRange) {
         nis: key,
         nama: namaSantri,
         sem: semesterSantri ?? (agg?.semester ?? '-'),
-        jenjang: jenjangSantriLabel,
+        jenjang: String(jenjangSantri),
         ket: keteranganSantri,
         h: d.cnt.hadir, a: d.cnt.alpha, s: d.cnt.sakit, i: d.cnt.izin,
         hadirPct: `${hadirPct}%`,
