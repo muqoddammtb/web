@@ -10682,12 +10682,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-<!-- ===== Modal Editor Parsial — Single Block (Revisi Otomatis-Deteksi) ===== -->
+<!-- ===== Modal Editor Parsial — Single Block (Auto-Deteksi v2 untuk index.html kamu) ===== -->
 <style>
   #editBtnIndex{
-    position:fixed;right:16px;bottom:16px;z-index:9999;padding:10px 14px;border:0;border-radius:10px;
-    background:#111831;color:#E6ECFF;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer
+    position: static !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+    border-radius: 6px;
+    background: #1e88e5 !important;
+    color: #fff !important;
+    border: 1px solid #ccc !important;
+    padding: 10px 14px !important;
+    cursor: pointer;
   }
+  #editBtnIndex:hover{ background:#1565c0 !important; }
+
   #overlayEdit{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);backdrop-filter:saturate(120%) blur(2px)}
   #overlayEdit, #overlayEdit * , #overlayEdit *::before, #overlayEdit *::after{box-sizing:border-box}
   #overlayEdit .panel{
@@ -10710,23 +10721,9 @@ document.addEventListener("DOMContentLoaded", () => {
   #stagedBadge{font-size:12px;color:#c6ffde;background:#16321c;border:1px solid #1f5b33;padding:6px 10px;border-radius:999px}
   .btn-danger{border-color:#6b1f2d;background:#3a1a24;color:#ffd0d4}
   .btn-ok{border-color:#1f5b33;background:#16321c;color:#c6ffde}
-
-  /* Tombol inline (opsional) menyesuaikan tombol "HTML" kamu */
-  #editBtnIndex{
-    position: static !important;
-    right: auto !important;
-    bottom: auto !important;
-    z-index: auto !important;
-    box-shadow: none !important;
-    border-radius: 6px;
-    background: #1e88e5 !important;
-    color: #fff !important;
-    border: 1px solid #ccc !important;
-    padding: 10px 14px !important;
-    cursor: pointer;
-  }
-  #editBtnIndex:hover{ background:#1565c0 !important; }
 </style>
+
+<button id="editBtnIndex" type="button" style="display:none">Edit Parsial</button>
 
 <div id="overlayEdit" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
   <div class="panel">
@@ -10753,7 +10750,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
 (()=>{
-  // ===== KONFIG REPO =====
+  // ===== KONFIG REPO (sesuai repo kamu) =====
   const API    = '/api/gitFile';
   const OWNER  = 'digitalmtq';
   const REPO   = 'web';
@@ -10762,11 +10759,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== STATE =====
   let fullText = '', lastSha = null;
-  const STAGED = {};       // key -> view string yg DIEDIT (diambil dari single block)
-  const FOUND  = {};       // key -> seg ditemukan
+  const STAGED = {}; // key -> isi view yg diedit
+  const FOUND  = {}; // key -> seg ditemukan
+
+  // ====== Helper DOM =====
   const $ = s => document.querySelector(s);
 
-  // ===== UI =====
+  // ==== Inject tombol di UI kamu (di samping <select id="kelas">) ====
+  (function ensureInlineButton(){
+    const btn = $('#editBtnIndex');
+    const kelas = document.getElementById('kelas');
+    if (kelas && btn && !btn.dataset.attached){
+      kelas.insertAdjacentElement('afterend', btn);
+      btn.style.display = '';
+      btn.dataset.attached = '1';
+    } else if (btn && !btn.dataset.attached) {
+      // fallback: tampilkan mengambang kanan-bawah kalau #kelas belum ada
+      btn.style.cssText += ';position:fixed;right:16px;bottom:16px;z-index:9999;display:';
+    }
+  })();
+
   const btnOpen    = $('#editBtnIndex');
   const modal      = $('#overlayEdit');
   const btnClose   = $('#btnCloseModal');
@@ -10776,7 +10788,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const badge      = $('#stagedBadge');
   const foundInfo  = $('#foundInfo');
 
-  // ===== Admin Gate =====
+  // ===== Admin Gate (endpoint kamu sudah ada) =====
   async function ensureAdmin(){
     if (sessionStorage.getItem('isAdmin') === '1') return true;
     const pass = prompt('Masukkan password admin:'); if (pass == null) return false;
@@ -10804,7 +10816,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }catch(err){ console.error(err); alert('Gagal verifikasi admin: '+err.message); return false; }
   }
 
-  // ===== DAFTAR ITEM (urut tampil di editor) =====
+  // ===== DAFTAR ITEM — disesuaikan dengan index.html kamu =====
   const ITEMS = [
     {key:'LOGIN_H1',      label:'1) Judul Login (H1 di #login-card)',                      required:true},
     {key:'DASHBOARD_H1',  label:'2) Judul Dashboard (H1 di #dashboard-card)',              required:true},
@@ -10819,30 +10831,23 @@ document.addEventListener("DOMContentLoaded", () => {
     {key:'SEMESTER_OPTS', label:'8) <select class="semester"> (VALUE => LABEL)',           required:false},
     {key:'KET_OPTS',      label:'9) <select class="keterangan"> (VALUE => LABEL)',         required:false},
 
+    // Bundle kelas & fallback label (akan otomatis tersembunyi kalau tidak ada di file)
     {key:'KELAS_BUNDLE',  label:'10) Kelas: semuaKelas + namaKelasCustom',                 required:false},
     {key:'KELOMPOK_FB',   label:'11) Fallback “Kelompok Ust. …” (untuk PDF)',              required:false},
 
+    // THMS map yang memang ada di file kamu
     {key:'THMS_GLOBAL',   label:'12) THMS Global: const BATAS = {...}',                    required:false},
     {key:'THMS_PDF',      label:'13) THMS di PDF_percentCapaian()',                        required:false},
     {key:'THMS_FROM_T',   label:'14) THMS di hitungTotalAllJuzFromTable()',                required:false},
     {key:'THMS_AUTO',     label:'15) THMS di hitungTotalAllJuzOtomatis()',                 required:false},
 
+    // PDF lokasi & TTD (sudah cocok dengan fungsi kamu)
     {key:'PDF_REKAP_LOK',  label:'16) PDF Rekap — Nama Lokasi',                            required:false},
     {key:'PDF_ALL_LOK',    label:'17) PDF All Kelas — Nama Lokasi',                        required:false},
     {key:'PDF_SANTRI_LOK', label:'18) PDF Per Santri — Nama Lokasi',                       required:false},
-
     {key:'PDF_REKAP_TTD',  label:'19) PDF Rekap — Label TTD (2 baris)',                    required:false},
     {key:'PDF_ALL_TTD',    label:'20) PDF All Kelas — Label TTD (2 baris)',                required:false},
     {key:'PDF_SANTRI_TTD', label:'21) PDF Per Santri — Label TTD (2 baris)',               required:false},
-
-    {key:'THMS_JUZLIST_JUZOVERLAY', label:'22) THMS — Juz List di #juzOverlay (isi <li>…)</li>', required:false},
-    {key:'THMS_JUZLIST_MURRANGE',   label:'23) THMS — Juz List di #murRangeOverlay (isi <li>…)</li>', required:false},
-
-    // Banyak instalasi terbaru belum punya ABS_FLEX — jangan wajibkan
-    {key:'ABS_PER_STATUS',     label:'24) ABS Flex — perStatus (1..6)',                    required:false},
-    {key:'ABS_DEFAULT_TARGET', label:'25) ABS Flex — defaultTarget (1..6)',                required:false},
-    {key:'ABS_MAX_TARGET',     label:'26) ABS Flex — maxTarget (1..6)',                    required:false},
-    {key:'ABS_SESI_ALL',       label:'27) ABS Flex — sesiAll (array ["Subuh","Pagi",...])',required:false},
   ];
   const ITEM = Object.fromEntries(ITEMS.map(i=>[i.key,i]));
 
@@ -10850,13 +10855,12 @@ document.addEventListener("DOMContentLoaded", () => {
   btnOpen?.addEventListener('click', async () => {
     if (!await ensureAdmin()) return;
     await ensureLoaded(true);
-    // Pre-scan segmen agar hanya tampilkan yang ditemukan
     preScanSegments();
     box.value = buildMasterBlock();
-    modal.style.display = 'block';
     parseMasterIntoStaged();
     updateBadge();
     updateFoundInfo();
+    modal.style.display = 'block';
   });
   btnClose?.addEventListener('click', () => { modal.style.display = 'none'; });
 
@@ -10902,7 +10906,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const js = await r.json();
       fullText = updated; lastSha = js.commit || js.sha || lastSha;
       alert('Perubahan tersimpan.');
-      // rebuild view dari file terbaru
       preScanSegments();
       box.value = buildMasterBlock();
       parseMasterIntoStaged(); updateBadge(); updateFoundInfo();
@@ -10923,7 +10926,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fullText = js.content||''; lastSha = js.sha||null;
   }
 
-  // ====== MARKER UTILS (single-block) ======
+  // ===== MARKER UTILS =====
   const openMark = k => `/*[[${k}]]*/`;
   const closeMark= k => `/*[[/${k}]]*/`;
 
@@ -10947,10 +10950,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const missing = ITEMS.filter(it => !FOUND[it.key]).map(it => it.label);
     if (missing.length){
-      lines.push('// === Bagian tidak ditemukan (hanya catatan, tidak bisa diedit) ===');
-      for (const label of missing){
-        lines.push(`// - ${label}`);
-      }
+      lines.push('// === Bagian tidak ditemukan (catatan, tidak bisa diedit) ===');
+      for (const label of missing){ lines.push(`// - ${label}`); }
       lines.push('');
     }
     return lines.join('\n');
@@ -10970,23 +10971,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updateBadge(){
-    const n = Object.keys(STAGED).length;
-    badge.textContent = `${n} blok`;
-  }
+  function updateBadge(){ badge.textContent = `${Object.keys(STAGED).length} blok`; }
   function updateFoundInfo(){
     const found = Object.keys(FOUND).filter(k=>FOUND[k]).length;
     const total = ITEMS.length;
     foundInfo.textContent = `Found ${found}/${total}`;
   }
 
-  function trimKeepNewlineEdges(s){
-    return String(s).replace(/^\n+/, '').replace(/\n+$/, '');
-  }
+  function trimKeepNewlineEdges(s){ return String(s).replace(/^\n+/, '').replace(/\n+$/, ''); }
   function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function decodeEntities(s){ return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); }
 
-  // ===== Segment finders =====
-  // Cari h1 PERSIS DI DALAM container <div id="..."> ... </div> (lebih aman)
+  // ===== Segment finders — DISESUAIKAN DENGAN index.html KAMU =====
+  // H1 di #login-card / #dashboard-card (pakai H1 pertama di dalamnya)
   function h1InsideDiv(divId){
     const t = fullText;
     const reDiv = new RegExp(`<div[^>]*id=["']${divId}["'][^>]*>([\\s\\S]*?)<\\/div>`, 'i');
@@ -11000,25 +10998,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const end   = start + h1Inner.length;
     return {start, end, text: h1Inner};
   }
+
+  // Cari thead dari tabel santri — utamakan #santri-table; fallback: tabel yg punya kolom Nis/Nama
+  function findTheadThCells(){
+    const t = fullText;
+    // 1) id pasti kamu
+    let seg = byRegex(/<table[^>]*id=["']santri-table["'][^>]*>[\s\S]{0,8000}?<thead>([\s\\S]*?)<\/thead>/i);
+    if (!seg){
+      // 2) fallback: cari tabel dengan <th> Nis/Nama
+      seg = byRegex(/<table\b[^>]*>[\s\S]{0,8000}?<thead>([\s\S]*?<\/thead>)/i);
+      if (seg && !/>\s*Nis\s*<\/th>/i.test(seg.text)) seg = null;
+    }
+    if (!seg) return null;
+
+    const html = seg.text; const base = seg.start;
+    const re = /<th\b[^>]*>([\s\S]*?)<\/th>/gi;
+    const cells=[]; let m;
+    while((m=re.exec(html))){
+      const inner = (m[1]||'').trim();
+      const start = base + m.index + m[0].indexOf(m[1]||'');
+      const end   = start + (m[1]||'').length;
+      cells.push({start,end,text:inner});
+    }
+    return cells.length ? {cells, count:cells.length} : null;
+  }
+
   function byRegex(re){
     re.lastIndex=0; const t=fullText; const m=re.exec(t); if (!m) return null;
     const inner=m[1]??''; const innerStart=m.index + m[0].indexOf(inner); const innerEnd=innerStart+inner.length;
     return {start:innerStart, end:innerEnd, text:inner};
   }
-  function findTheadThCells(){
-    const seg = byRegex(/<table[^>]*id=["']santri-table["'][^>]*>[\s\S]{0,6000}?<thead>([\s\S]*?)<\/thead>/i);
-    if (!seg) return null;
-    const html = seg.text; const base = seg.start;
-    const re = /<th\b[^>]*>([\s\S]*?)<\/th>/gi;
-    const cells=[]; let m;
-    while((m=re.exec(html))){
-      const inner = m[1]||'';
-      const innerStart = base + m.index + m[0].indexOf(inner);
-      const innerEnd   = innerStart + inner.length;
-      cells.push({start:innerStart,end:innerEnd,text:inner});
-    }
-    return cells.length ? {cells, count:cells.length} : null;
-  }
+
   function findOptionsInSelect(cls){
     const seg = byRegex(new RegExp(`<select[^>]*class=["']${cls}["'][^>]*>([\\s\\S]*?)<\\/select>`,'i'));
     if (!seg) return null;
@@ -11054,6 +11064,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return {items, innerStart: seg.start, innerEnd: seg.end, innerText: seg.text};
   }
+
+  // Ambil UL .juz-list di overlay tertentu (kalau ada di instalasimu)
   function findUlJuzInnerIn(containerId){
     const t = fullText;
     const reContainer = new RegExp(`<div[^>]*id=["']${containerId}["'][^>]*>([\\s\\S]*?)<\\/div>`,'i');
@@ -11066,53 +11078,91 @@ document.addEventListener("DOMContentLoaded", () => {
     const end   = start + ulInner.length;
     return {start, end, text: ulInner};
   }
+
+  // JENJANG_MAX (ada dua lokasi yang umum di file kamu)
   function findJenjangMax(){
-    return byRegex(/function\s+loadSantriData\s*\([^)]*\)\s*{[\s\S]{0,8000}?const\s+JENJANG_MAX\s*=\s*Number\(\s*window\.JENJANG_MAX\s*\?\?\s*(\d+)\s*\)/i);
+    return byRegex(/function\s+loadSantriData\s*\([^)]*\)\s*{[\s\S]{0,12000}?const\s+JENJANG_MAX\s*=\s*Number\(\s*window\.JENJANG_MAX\s*\?\?\s*(\d+)\s*\)/i);
   }
   function findJenjangMaxConfig(){
-    return byRegex(/\/\/\s*=+\s*KONFIG[^\n]*\n[\s\S]{0,2000}?const\s+JENJANG_MAX\s*=\s*Number\(\s*window\.JENJANG_MAX\s*\?\?\s*(\d+)\s*\)/i);
+    return byRegex(/(?:\/\/\s*=+\s*KONFIG[^\n]*\n)?[\s\S]{0,3000}?const\s+JENJANG_MAX\s*=\s*Number\(\s*window\.JENJANG_MAX\s*\?\?\s*(\d+)\s*\)/i);
   }
+
+  // PDF lokasi & TTD — pola sesuai fungsi kamu (doc.text(`Tengaran, ${ttdDate}`...), dsb)
   function findPdfLok(funcName){
     const re = new RegExp(
-      `function\\s+${funcName}\\s*\\([^)]*\\)\\s*{[\\s\\S]{0,120000}?doc\\.text\\(\\s*\\\`([^\\\`]*?),\\s*\\$\\{ttdDate\\}\\\`\\s*,\\s*margin\\.left\\s*\\+\\s*totalW\\s*,\\s*y\\s*,\\s*\\{[^}]*align\\s*:\\s*'right'[^}]*\\}[^)]*\\)`,
+      `function\\s+${funcName}\\s*\\([^)]*\\)\\s*{[\\s\\S]{0,120000}?doc\\.text\\(\\s*\\\`([^\\\`]*?),\\s*\\$\\{ttdDate\\}\\\`\\s*,\\s*margin(?:\\.left)?\\s*\\+\\s*totalW\\s*,\\s*y\\s*,\\s*\\{[^}]*align\\s*:\\s*'right'[^}]*\\}[^)]*\\)`,
       'i'
     );
     return byRegex(re);
   }
   function findPdfTtd(funcName){
     const re = new RegExp(
-      `function\\s+${funcName}\\s*\\([^)]*\\)\\s*{[\\s\\S]{0,120000}?doc\\.text\\(\\s*['"]([^'"]*)['"]\\s*,\\s*leftX\\s*,\\s*headY\\s*\\)\\s*;\\s*doc\\.text\\(\\s*['"]([^'"]*)['"]\\s*,\\s*rightX\\s*,\\s*headY\\s*\\)`,
+      `function\\s+${funcName}\\s*\\([^)]*\\)\\s*{[\\s\\S]{0,120000}?doc\\.text\\(\\s*['"]([^'"]*)['"]\\s*,\\s*leftX\\s*,\\s*headY\\s*\\)[\\s\\S]{0,300}?doc\\.text\\(\\s*['"]([^'"]*)['"]\\s*,\\s*rightX\\s*,\\s*headY\\s*\\)`,
       'i'
     );
     const t = fullText; const m = re.exec(t);
     if (!m) return null;
-    const whole = m[0];
-    const wholeStart = m.index;
-    const offset1 = whole.indexOf(m[1]);
-    const offset2 = whole.lastIndexOf(m[2]);
+    const whole = m[0]; const wholeStart = m.index;
+    const off1 = whole.indexOf(m[1]); const off2 = whole.lastIndexOf(m[2]);
     return {
-      left:  { start: wholeStart + offset1, end: wholeStart + offset1 + m[1].length,  text: m[1] },
-      right: { start: wholeStart + offset2, end: wholeStart + offset2 + m[2].length,  text: m[2] }
+      left:  { start: wholeStart + off1, end: wholeStart + off1 + m[1].length,  text: m[1] },
+      right: { start: wholeStart + off2, end: wholeStart + off2 + m[2].length,  text: m[2] }
     };
   }
 
-  // === ABSENSI FLEX finders (opsional) ===
-  function findAbsFlexPerStatus(){
-    return byRegex(/window\.ABS_FLEX_CFG\s*=\s*window\.ABS_FLEX_CFG\s*\|\|\s*{[\s\S]{0,8000}?perStatus\s*:\s*Number\(\s*window\.ABS_FLEX_PER_STATUS\s*\?\?\s*(\d+)\s*\)/i);
+  // THMS maps
+  function findTHMSMap(re){ return byRegex(re); }
+
+  // Segment switcher
+  function getSegment(key){
+    switch(key){
+      case 'LOGIN_H1':      return h1InsideDiv('login-card');
+      case 'DASHBOARD_H1':  return h1InsideDiv('dashboard-card');
+      case 'TABLE_HEADERS': return findTheadThCells();
+
+      case 'JENJANG_OPTS':  return findOptionsInSelect('jenjang');
+      case 'SEMESTER_OPTS': return findOptionsInSelect('semester');
+      case 'KET_OPTS':      return findOptionsInSelect('keterangan');
+
+      case 'MODAL_SANTRI_JENJANG':     return findOptionsInSelectById('inputJenjang');
+      case 'THMS_JUZLIST_JUZOVERLAY':  return findUlJuzInnerIn('juzOverlay');
+      case 'THMS_JUZLIST_MURRANGE':    return findUlJuzInnerIn('murRangeOverlay');
+
+      case 'JENJANG_MAX':     return findJenjangMax();
+      case 'JENJANG_MAX_CFG': return findJenjangMaxConfig();
+
+      // Bundle kelas (optional — muncul kalau ada function aturDropdownKelas & namaKelasCustom)
+      case 'KELAS_BUNDLE': {
+        const arr = byRegex(/function\s+aturDropdownKelas\s*\([^)]*\)\s*{[\s\S]{0,16000}?const\s+semuaKelas\s*=\s*\[([\s\S]*?)\];/i);
+        const obj = byRegex(/const\s+namaKelasCustom\s*=\s*{([\s\S]*?)}\s*;/i);
+        if (!arr || !obj) return null; return {bundle:true, arr, obj};
+      }
+      case 'KELOMPOK_FB':  return byRegex(/custom\s*=\s*window\.namaKelasCustom\s*\|\|\s*window\.NAMA_KELAS_CUSTOM\s*\|\|\s*{([\s\S]*?)}\s*;/i);
+
+      case 'THMS_GLOBAL': return findTHMSMap(/const\s+BATAS\s*=\s*{([\s\S]*?)}\s*;/i);
+      case 'THMS_PDF':    return findTHMSMap(/function\s+PDF_percentCapaian\s*\([^)]*\)\s*{[\s\S]{0,8000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
+      case 'THMS_FROM_T': return findTHMSMap(/function\s+hitungTotalAllJuzFromTable\s*\([^)]*\)\s*{[\s\S]{0,20000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
+      case 'THMS_AUTO':   return findTHMSMap(/function\s+hitungTotalAllJuzOtomatis\s*\([^)]*\)\s*{[\s\S]{0,20000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
+
+      case 'PDF_REKAP_LOK':  return findPdfLok('pdfRekapDownload');
+      case 'PDF_ALL_LOK':    return findPdfLok('pdfAllKelasDownload');
+      case 'PDF_SANTRI_LOK': return findPdfLok('pdfSantriDownload');
+
+      case 'PDF_REKAP_TTD':  return findPdfTtd('pdfRekapDownload');
+      case 'PDF_ALL_TTD':    return findPdfTtd('pdfAllKelasDownload');
+      case 'PDF_SANTRI_TTD': return findPdfTtd('pdfSantriDownload');
+    }
+    return null;
   }
-  function findAbsFlexDefaultTarget(){
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,8000}?defaultTarget\s*:\s*(\d+)/i);
-  }
-  function findAbsFlexMaxTarget(){
-    return byRegex(/window\.ABS_FLEX_CFG[\s\S]{0,8000}?maxTarget\s*:\s*(\d+)/i);
-  }
-  function findAbsFlexSesiAll(){
-    return byRegex(/function\s+defaultLabel\s*\([^)]*\)\s*{[\s\S]{0,4000}?const\s+sesiAll\s*=\s*(\[[\s\S]*?\])\s*;/i);
+
+  function preScanSegments(){
+    for (const it of ITEMS){ FOUND[it.key] = !!getSegment(it.key); }
   }
 
   // ===== Build View =====
   function buildView(key){
     const seg = getSegment(key); if (!seg) return '';
+
     if (key==='LOGIN_H1' || key==='DASHBOARD_H1') return seg.text.trim();
 
     if (key==='TABLE_HEADERS'){
@@ -11141,7 +11191,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }); return lines.join('\n');
     }
     if (key==='THMS_GLOBAL' || key==='THMS_PDF' || key==='THMS_FROM_T' || key==='THMS_AUTO'){
-      const pairs = parseObjectPairs(seg.text);
+      const pairs = {}; (seg.text.match(/(\d+)\s*:\s*(\d+)/g)||[]).forEach(x=>{
+        const m=x.match(/(\d+)\s*:\s*(\d+)/); if(m) pairs[m[1]]=Number(m[2]);
+      });
       const ks = Object.keys(pairs).map(Number).sort((a,b)=>a-b);
       return ks.map(k => `${k}=${pairs[k]}`).join('\n');
     }
@@ -11159,66 +11211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE'){
       return seg.text.trim();
     }
-
-    // ABS FLEX views
-    if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
-      return String(seg.text).trim();
-    }
-    if (key==='ABS_SESI_ALL'){
-      return String(seg.text).trim(); // array literal
-    }
-
     return (seg.text||'').trim();
-  }
-
-  function getSegment(key){
-    switch(key){
-      case 'LOGIN_H1':      return h1InsideDiv('login-card');
-      case 'DASHBOARD_H1':  return h1InsideDiv('dashboard-card');
-      case 'KELAS_BUNDLE': {
-        const arr = byRegex(/function\s+aturDropdownKelas\s*\([^)]*\)\s*{[\s\S]{0,8000}?const\s+semuaKelas\s*=\s*\[([\s\S]*?)\];/i);
-        const obj = byRegex(/const\s+namaKelasCustom\s*=\s*{([\s\S]*?)}\s*;/i);
-        if (!arr || !obj) return null; return {bundle:true, arr, obj};
-      }
-      case 'KELOMPOK_FB':  return byRegex(/custom\s*=\s*window\.namaKelasCustom\s*\|\|\s*window\.NAMA_KELAS_CUSTOM\s*\|\|\s*{([\s\S]*?)}\s*;/i);
-      case 'TABLE_HEADERS':return findTheadThCells();
-      case 'JENJANG_OPTS': return findOptionsInSelect('jenjang');
-
-      case 'JENJANG_MAX':     return findJenjangMax();
-      case 'JENJANG_MAX_CFG': return findJenjangMaxConfig();
-
-      case 'SEMESTER_OPTS': return findOptionsInSelect('semester');
-      case 'KET_OPTS':      return findOptionsInSelect('keterangan');
-      case 'THMS_GLOBAL':   return byRegex(/const\s+BATAS\s*=\s*{([\s\S]*?)}\s*;/i);
-      case 'THMS_PDF':      return byRegex(/function\s+PDF_percentCapaian\s*\([^)]*\)\s*{[\s\S]{0,4000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
-      case 'THMS_FROM_T':   return byRegex(/function\s+hitungTotalAllJuzFromTable\s*\([^)]*\)\s*{[\s\S]{0,12000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
-      case 'THMS_AUTO':     return byRegex(/function\s+hitungTotalAllJuzOtomatis\s*\([^)]*\)\s*{[\s\S]{0,12000}?const\s+batasSemester\s*=\s*{([\s\S]*?)}\s*;/i);
-
-      case 'PDF_REKAP_LOK':  return findPdfLok('pdfRekapDownload');
-      case 'PDF_ALL_LOK':    return findPdfLok('pdfAllKelasDownload');
-      case 'PDF_SANTRI_LOK': return findPdfLok('pdfSantriDownload');
-
-      case 'PDF_REKAP_TTD':  return findPdfTtd('pdfRekapDownload');
-      case 'PDF_ALL_TTD':    return findPdfTtd('pdfAllKelasDownload');
-      case 'PDF_SANTRI_TTD': return findPdfTtd('pdfSantriDownload');
-
-      case 'MODAL_SANTRI_JENJANG':     return findOptionsInSelectById('inputJenjang');
-      case 'THMS_JUZLIST_JUZOVERLAY':  return findUlJuzInnerIn('juzOverlay');
-      case 'THMS_JUZLIST_MURRANGE':    return findUlJuzInnerIn('murRangeOverlay');
-
-      // ABS FLEX (opsional)
-      case 'ABS_PER_STATUS':     return findAbsFlexPerStatus();
-      case 'ABS_DEFAULT_TARGET': return findAbsFlexDefaultTarget();
-      case 'ABS_MAX_TARGET':     return findAbsFlexMaxTarget();
-      case 'ABS_SESI_ALL':       return findAbsFlexSesiAll();
-    }
-    return null;
-  }
-
-  function preScanSegments(){
-    for (const it of ITEMS){
-      FOUND[it.key] = !!getSegment(it.key);
-    }
   }
 
   // ===== Build patch =====
@@ -11226,7 +11219,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tasks = [];
 
     for (const key of Object.keys(STAGED)){
-      if (!FOUND[key]) continue; // skip yang tidak ada
+      if (!FOUND[key]) continue;
       const rules = ITEM[key] || {};
       const view  = STAGED[key];
       const seg   = getSegment(key);
@@ -11240,7 +11233,7 @@ document.addEventListener("DOMContentLoaded", () => {
         continue;
       }
 
-      // 3: <th> header
+      // 3: header <th> (jumlah baris harus sama dengan jumlah <th>)
       if (key==='TABLE_HEADERS'){
         const lines = (view||'').split('\n'); const {cells}=seg;
         if (lines.length!==cells.length) return {error:`${rules.label||key}: jumlah baris (${lines.length}) harus = jumlah <th> (${cells.length}).`};
@@ -11321,9 +11314,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 12–15: THMS maps
       if (key==='THMS_GLOBAL' || key==='THMS_PDF' || key==='THMS_FROM_T' || key==='THMS_AUTO'){
-        const map=parseLinesKeyVal(view); const ks=Object.keys(map);
+        const map={}; String(view||'').split('\n').forEach(line=>{
+          const m=line.trim().match(/^(\d+)\s*[:=]\s*(\d+)\s*$/); if (m) map[m[1]]=Number(m[2]);
+        });
+        const ks=Object.keys(map);
         if(ks.length===0) return {error:`${rules.label||key}: isi minimal satu pasangan k:v (mis. 1: 5)`};
-        const content=Object.keys(map).sort((a,b)=>Number(a)-Number(b)).map(k=>`${k}: ${map[k]}`).join(', ');
+        const content=ks.sort((a,b)=>Number(a)-Number(b)).map(k=>`${k}: ${map[k]}`).join(', ');
         const segTH = getSegment(key);
         tasks.push({start:segTH.start, end:segTH.end, content});
         continue;
@@ -11355,7 +11351,7 @@ document.addEventListener("DOMContentLoaded", () => {
         continue;
       }
 
-      // 19–21: TTD
+      // 19–21: TTD 2 baris
       if (key==='PDF_REKAP_TTD' || key==='PDF_ALL_TTD' || key==='PDF_SANTRI_TTD'){
         const lines=String(view||'').split('\n');
         const left=(lines[0]||'').trim(); const right=(lines[1]||'').trim();
@@ -11364,70 +11360,12 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.push({start:seg.right.start, end:seg.right.end, content:escapeHtml(right)});
         continue;
       }
-
-      // 6: Modal Tambah Santri — Jenjang
-      if (key==='MODAL_SANTRI_JENJANG'){
-        const lines=(view||'').split('\n').map(s=>s.trim());
-        const pairs=[];
-        for (const line of lines){
-          if (!line) continue;
-          const mm=line.match(/^([^=]*)=>(.*)$/);
-          if(!mm) return {error:`${rules.label||key}: format baris invalid: "${line}". Contoh: A1 => ILA`};
-          pairs.push({value:(mm[1]||'').trim(), label:(mm[2]||'').trim()});
-        }
-        function optLine(value,label){
-          const v=String(value).replace(/"/g,'&quot;'); const lbl=escapeHtml(label);
-          if (v==='') return `  <option value=""></option>`;
-          return `  <option value="${v}">${lbl}</option>`;
-        }
-        const inner=pairs.map(p=>optLine(p.value,p.label)).join('\n');
-        const newInner=(inner?'\n'+inner+'\n  ':'');
-        tasks.push({start:seg.innerStart, end:seg.innerEnd, content:newInner});
-        continue;
-      }
-
-      // 22–23: UL THMS
-      if (key==='THMS_JUZLIST_JUZOVERLAY' || key==='THMS_JUZLIST_MURRANGE'){
-        const html=String(view||'').trim();
-        tasks.push({start:seg.start, end:seg.end, content:html});
-        continue;
-      }
-
-      // ABS FLEX (angka 1..6)
-      if (key==='ABS_PER_STATUS' || key==='ABS_DEFAULT_TARGET' || key==='ABS_MAX_TARGET'){
-        const trimmed = String(view||'').trim();
-        const num = Number(trimmed);
-        if (!Number.isInteger(num) || num<1 || num>6) return {error:`${rules.label||key}: masukkan bilangan bulat 1..6.`};
-        tasks.push({start:seg.start, end:seg.end, content:String(num)});
-        continue;
-      }
-      // ABS FLEX sesiAll (array literal)
-      if (key==='ABS_SESI_ALL'){
-        const txt = String(view||'').trim();
-        if (!/^\[\s*[\s\S]*\]\s*$/.test(txt)) return {error:`${rules.label||key}: isi harus array literal, contoh: ["Subuh","Pagi","Siang","Sore","Malam","Tahajjud"]`};
-        tasks.push({start:seg.start, end:seg.end, content:txt});
-        continue;
-      }
     }
-
     return {tasks};
-  }
-
-  // ===== Helpers =====
-  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function decodeEntities(s){ return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); }
-  function parseObjectPairs(inner){
-    const out={}; (inner.match(/(\d+)\s*:\s*(\d+)/g)||[]).forEach(x=>{ const m=x.match(/(\d+)\s*:\s*(\d+)/); if(m) out[m[1]]=Number(m[2]); });
-    return out;
-  }
-  function parseLinesKeyVal(view){
-    const out={}; String(view||'').split('\n').forEach(line=>{
-      const m=line.trim().match(/^(\d+)\s*[:=]\s*(\d+)\s*$/); if (m) out[m[1]]=Number(m[2]);
-    }); return out;
   }
 })();
 </script>
-<!-- ===== /Modal Editor Parsial — Single Block (Revisi Otomatis-Deteksi) ===== -->
+<!-- ===== /Modal Editor Parsial — Single Block (Auto-Deteksi v2) ===== -->
 
 
 
