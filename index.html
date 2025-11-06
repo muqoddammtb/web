@@ -4760,19 +4760,21 @@ document.getElementById('mur-save')?.addEventListener('click', function(){ simpa
     document.head.appendChild(s);
   })();
 
-  /** Konversi kode A1..A34 => label ILA..ILD, 1A..1J, 2A..2J, 3A..3J, dst */
-  function jenjangLabel(code) {
-    const m = String(code || '').trim().match(/^A(\d+)$/i);
-    if (!m) return String(code || '');
-    const n = Number(m[1]);
-    if (n >= 1 && n <= 4) {
-      return ['ILA','ILB','ILC','ILD'][n - 1];
-    }
-    const group = Math.floor((n - 5) / 10) + 1;
-    const idx   = (n - 5) % 10;
-    const letter = String.fromCharCode(65 + idx);
-    return `${group}${letter}`;
+  /** Konversi tampilan jenjang untuk render dashboard & export:
+ *  - "A1" -> "1 PDF", "A2" -> "2 PDF", ..., "A12" -> "12 PDF"
+ *  - selain pola A<number>, tampilkan apa adanya (mis. "1A", "2B", "ILA", dst)
+ */
+function jenjangLabel(code) {
+  const raw = String(code || '').trim();
+  // Izinkan leading zero setelah 'A' (mis. "A01" -> "1 PDF")
+  const m = raw.match(/^A0*([1-9]\d*)$/i);
+  if (m) {
+    const n = Number(m[1]);           // sudah pasti integer positif
+    return `${n} PDF`;
   }
+  // Bukan pola A<number> → kembalikan apa adanya
+  return raw;
+}
 
   // ====== Helper slot absensi (BARU) ======
   function _slotMetricsFromRecord(rec){
