@@ -5005,6 +5005,49 @@ function applyUIOverrides(allDataNorm, aggMap){
     if (ov.keterangan) r.keterangan = String(ov.keterangan).trim();
   });
 }
+
+
+// === Ambil TEKS yang tampil di dashboard (per NIS/ID) ===
+function _findRowElByKey(key){
+  const k = String(key||'').trim(); if (!k) return null;
+  let row = document.querySelector(`[data-key="${k}"], [data-nis="${k}"], [data-id="${k}"]`);
+  if (row) return row;
+  const all = document.querySelectorAll('[data-key], [data-nis], [data-id]');
+  for (const el of all){
+    const kk = (el.dataset.key||el.dataset.nis||el.dataset.id||'').trim();
+    if (kk === k) return el;
+  }
+  return null;
+}
+
+function _readDisplayFieldFromRow(key, className){ // 'semester' | 'keterangan' | 'jenjang'
+  const row = _findRowElByKey(key);
+  if (!row) return null;
+
+  const sel = row.querySelector(`select.${className}, [name="${className}"].${className}`);
+  if (sel) {
+    const opt = sel.options[sel.selectedIndex];
+    return { value: (sel.value ?? '').trim(), text: (opt?.text ?? sel.value ?? '').trim() };
+  }
+  const inp = row.querySelector(`input.${className}, [name="${className}"].${className}`);
+  if (inp) {
+    const v = (inp.value ?? '').trim();
+    return { value: v, text: v };
+  }
+  return null;
+}
+
+// Dipakai oleh semua exporter
+function semesterDisplayForKey(key, fallback){
+  const f = _readDisplayFieldFromRow(key, 'semester');
+  if (f && (f.text || f.value)) return f.text || f.value;
+  return (fallback!=null && fallback!=='') ? String(fallback) : '-';
+}
+function keteranganDisplayForKey(key, fallback){
+  const f = _readDisplayFieldFromRow(key, 'keterangan');
+  if (f && (f.text || f.value)) return f.text || f.value;
+  return (fallback!=null && String(fallback).trim()!=='') ? String(fallback) : '-';
+}
 	
 
   // === Helper Kelas/Kelompok ===
@@ -5716,9 +5759,9 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
           no: String(idx+1),
           nis: r.nis || r.id || '-',
           nama: r.nama || '-',
-          sem: r.semester ?? '-',
+          sem: semesterDisplayForKey(r.nis || r.id || '', r.semester),
           jenjang: jenjangLabel(r.jenjang ?? ''),
-          ket: r.keterangan ?? '-',
+          ket: keteranganDisplayForKey(r.nis || r.id || '', r.keterangan),
           h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
           hadirPct: `${hadirPct}%`,
           setoran: setoranText,
@@ -6258,9 +6301,9 @@ for (const k of Object.keys(aggMap)) {
             no: String(idx+1),
             nis: r.nis || r.id || '-',
             nama: r.nama || '-',
-            sem: r.semester ?? '-',
+            sem: semesterDisplayForKey(r.nis || r.id || '', r.semester),
             jenjang: jenjangLabel(r.jenjang ?? ''),
-            ket: r.keterangan ?? '-',
+            ket: keteranganDisplayForKey(r.nis || r.id || '', r.keterangan),
             h: hadirSlots, a: alphaSlots, s: sakitSlots, i: izinSlots,
             hadirPct: `${hadirPct}%`,
             setoran: setoranText,
@@ -6483,11 +6526,11 @@ async function xlsRekapDownload(){
           idx+1,
           r.nis || r.id || '',
           r.nama || '',
-          (r.semester ?? ''),
+          semesterDisplayForKey(r.nis || r.id || '', r.semester),
           jenjangLabel(r.jenjang ?? ''),
           hadirSlots, alphaSlots, sakitSlots, izinSlots,
           hadirPct,
-          (r.keterangan ?? ''),
+          keteranganDisplayForKey(r.nis || r.id || '', r.keterangan),
           setoranText,
           juzText,
           Number(r.totalJuz.toFixed(2)),
@@ -7218,9 +7261,9 @@ const jenjangSantriLabel = jenjangLabel(jenjangSantri || '');
         no: String(idx+1),
         nis: key,
         nama: namaSantri,
-        sem: semesterSantri ?? (agg?.semester ?? '-'),
+        sem: semesterDisplayForKey(key, semesterSantri ?? (agg?.semester ?? '-')),
         jenjang: jenjangSantriLabel,
-        ket: keteranganLive,
+        ket: keteranganDisplayForKey(key, keteranganLive),
         h: d.cnt.hadir, a: d.cnt.alpha, s: d.cnt.sakit, i: d.cnt.izin,
         hadirPct: `${hadirPct}%`,
         setoran: PDF_joinSAsegmentsNamaMerged(d.sa),
@@ -7261,9 +7304,9 @@ const juzTotalTxt  = (usingAbsensiRange || !agg)
       no: '',
       nis: key,
       nama: 'REKAP',
-      sem: semesterSantri ?? (agg?.semester ?? '-'),
+      sem: semesterDisplayForKey(key, semesterSantri ?? (agg?.semester ?? '-')),
       jenjang: jenjangSantriLabel,
-      ket: keteranganLive,
+      ket: keteranganDisplayForKey(key, keteranganLive),
       h: totH, a: totA, s: totS, i: totI,
       hadirPct: `${hadirPctTotal}%`,
       setoran: setoranTotal,
@@ -7310,7 +7353,7 @@ const juzTotalTxt  = (usingAbsensiRange || !agg)
       doc.text(kelasLine, margin.left, margin.top + 6);
       doc.text(`Santri: ${key} — ${namaSantri}`, margin.left, margin.top + 12);
       const rightX = pageW - margin.right - 78;
-      doc.text(`Semester: ${tableRows.find(r=>!r._isRekap)?.sem ?? '-'}`, rightX, margin.top + 6);
+      doc.text(`Semester: ${semesterDisplayForKey(key, tableRows.find(r=>!r._isRekap)?.sem ?? '-')}`, rightX, margin.top + 6);
       doc.text(`Periode Tahfiz: ${fmtD_M_YYYY(effStart)} s.d. ${fmtD_M_YYYY(effEnd)}`, rightX, margin.top + 12);
       doc.setTextColor(...theme.text);
     }
