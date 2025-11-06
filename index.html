@@ -4793,6 +4793,97 @@ document.getElementById('mur-save')?.addEventListener('click', function(){ simpa
     };
   }
 
+
+function getSelectedSemester(){
+  const el =
+    document.querySelector('select.semester') ||
+    document.querySelector('.semester select') ||
+    document.querySelector('#semester') ||
+    document.querySelector('select[name="semester"]');
+  const v = Number(el?.value);
+  return Number.isFinite(v) ? v : null;
+}
+
+function getSelectedJenjang(){
+  const el =
+    document.querySelector('select.jenjang') ||
+    document.querySelector('.jenjang select') ||
+    document.querySelector('#jenjang') ||
+    document.querySelector('select[name="jenjang"]');
+  const v = (el?.value ?? '').trim();
+  return v ? v : null;       // contoh: "A12", "2B", dst — biarkan string apa adanya
+}
+
+function getSelectedKeterangan(){
+  const el =
+    document.querySelector('select.keterangan') ||
+    document.querySelector('.keterangan select') ||
+    document.querySelector('#keterangan') ||
+    document.querySelector('select[name="keterangan"]') ||
+    document.querySelector('input.keterangan');
+  const v = (el?.value ?? '').trim();
+  return v ? v : null;       // contoh: "SP1", "SP2", "SP3", atau teks lain
+}
+
+// BACA OVERRIDE PER NIS/ID dari DOM (fleksibel terhadap berbagai struktur)
+function _readPerKeyOverrides(){
+  const map = new Map();
+
+  // Helper set nilai aman
+  function setOv(key, field, val){
+    if (val == null || String(val).trim() === '') return;
+    const k = String(key || '').trim();
+    if (!k) return;
+    if (!map.has(k)) map.set(k, {});
+    map.get(k)[field] = val;
+  }
+
+  // Pola 1: baris punya data-key/nis/id, lalu ada child .semester/.jenjang/.keterangan
+  document.querySelectorAll('[data-key], [data-nis], [data-id]').forEach(row => {
+    const key = row.dataset.key || row.dataset.nis || row.dataset.id;
+    if (!key) return;
+
+    const sem = row.querySelector('select.semester, input.semester, [name="semester"].semester');
+    const jen = row.querySelector('select.jenjang,  input.jenjang,  [name="jenjang"].jenjang');
+    const ket = row.querySelector('select.keterangan, input.keterangan, [name="keterangan"].keterangan');
+
+    if (sem) setOv(key, 'semester', Number(sem.value));
+    if (jen) setOv(key, 'jenjang',  String(jen.value).trim());
+    if (ket) setOv(key, 'keterangan', String(ket.value).trim());
+  });
+
+  // Pola 2: input/select berdiri sendiri dengan data-key/data-nis/data-id
+  const fields = [
+    {sel:'select.semester, input.semester, [name="semester"].semester', f:'semester', coerce:v=>Number(v)},
+    {sel:'select.jenjang,  input.jenjang,  [name="jenjang"].jenjang',   f:'jenjang',  coerce:v=>String(v).trim()},
+    {sel:'select.keterangan, input.keterangan, [name="keterangan"].keterangan', f:'keterangan', coerce:v=>String(v).trim()},
+  ];
+  for (const {sel, f, coerce} of fields){
+    document.querySelectorAll(sel).forEach(el => {
+      const key = el.dataset.key || el.dataset.nis || el.dataset.id || '';
+      if (!key) return;
+      setOv(key, f, coerce(el.value));
+    });
+  }
+
+  // Pola 3 (fallback ringan): nama input mengandung NIS, mis. name="semester-110123"
+  document.querySelectorAll('input[name^="semester-"], select[name^="semester-"]').forEach(el=>{
+    const m = String(el.name||'').match(/^semester-(.+)$/);
+    if (m) setOv(m[1], 'semester', Number(el.value));
+  });
+  document.querySelectorAll('input[name^="jenjang-"], select[name^="jenjang-"]').forEach(el=>{
+    const m = String(el.name||'').match(/^jenjang-(.+)$/);
+    if (m) setOv(m[1], 'jenjang', String(el.value).trim());
+  });
+  document.querySelectorAll('input[name^="keterangan-"], select[name^="keterangan-"]').forEach(el=>{
+    const m = String(el.name||'').match(/^keterangan-(.+)$/);
+    if (m) setOv(m[1], 'keterangan', String(el.value).trim());
+  });
+
+  return map; // Map<key, {semester?, jenjang?, keterangan?}>
+}
+	 
+
 // ====== Apakah record harian ini "bermakna" untuk dihitung sebagai 1 hari KBM? ======
 // ====== Apakah record harian ini "bermakna" untuk dihitung sebagai 1 hari KBM? (slot-only) ======
 function _isMeaningfulKBM(rec){
@@ -4855,6 +4946,34 @@ function getSelectedKelas(){
   }
   return { value: '', el };
 }
+
+
+function applyUIOverrides(allDataNorm, aggMap){
+  const perKey = _readPerKeyOverrides();     // baca dari DOM (tiap baris)
+  if (!perKey || perKey.size === 0) return;
+
+  // timpa di raw-normalized (hanya key yang ada di map)
+  (allDataNorm || []).forEach(it => {
+    const key = (it?.nis && String(it.nis)) || (it?.id && String(it.id)) || '';
+    if (!key) return;
+    const ov = perKey.get(String(key));
+    if (!ov) return;
+    if (ov.semester != null && Number.isFinite(Number(ov.semester))) it.semester = Number(ov.semester);
+    if (ov.jenjang)    it.jenjang = String(ov.jenjang).trim();
+    if (ov.keterangan) it.keterangan = String(ov.keterangan).trim();
+  });
+
+  // timpa di agregat
+  Object.keys(aggMap || {}).forEach(k => {
+    const r  = aggMap[k];
+    const ov = perKey.get(String(k));
+    if (!ov) return;
+    if (ov.semester != null && Number.isFinite(Number(ov.semester))) r.semester = Number(ov.semester);
+    if (ov.jenjang)    r.jenjang = String(ov.jenjang).trim();
+    if (ov.keterangan) r.keterangan = String(ov.keterangan).trim();
+  });
+}
+	
 
   // === Helper Kelas/Kelompok ===
 function buildKelasKelompokLine(kelas, kelasEl) {
@@ -5180,6 +5299,7 @@ for (const it of _sortedAbsensi){
 
   // 5) Agregasi base + merge angka aggregate D1
   const aggMap = PDF_buildRekapPerKey(allDataNorm);
+  applyUIOverrides(allDataNorm, aggMap);
 
   Object.values(aggMap).forEach(r => {
     const k = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim());
@@ -5863,6 +5983,7 @@ for (const it of _sortedAbsensi){
 
   // 5) Agregasi base + merge angka aggregate D1
   const aggMap = PDF_buildRekapPerKey(allDataNorm);
+  applyUIOverrides(allDataNorm, aggMap);
   Object.values(aggMap).forEach(r => {
     const k = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim());
     if (!k) return;
@@ -6832,12 +6953,61 @@ if (usingAbsensiRange) {
 }
     if (!mine.length) throw new Error('Tidak ada data untuk santri terpilih pada rentang tanggal.');
 
-    const namaSantri = selectedNama || (mine.find(it => it.nama)?.nama) || '-';
-    const semesterSantri = (mine.find(it => it.semester!=null)?.semester) ?? null;
-    const jenjangSantri  = (aggRows.find(r => r.nis === key || (!r.nis && r.id === key))?.jenjang)
-                        ?? (mine.find(it => it.jenjang!=null)?.jenjang)
-                        ?? '-';
-    const jenjangSantriLabel = jenjangLabel(jenjangSantri);
+    // --- dapatkan helper override UI (fallback ke no-op bila belum ada) ---
+const _getSelectedSemester   = (window.getSelectedSemester   || (() => null));
+const _getSelectedJenjang    = (window.getSelectedJenjang    || (() => null));
+const _getSelectedKeterangan = (window.getSelectedKeterangan || (() => null));
+
+// --- util kecil untuk cari data berdasarkan key (nis||id) ---
+const _byKey = (arr) => (arr || []).find(it => String(it?.nis || it?.id || '') === key) || null;
+const _byKeyAgg = (arr) => (arr || []).find(r => (r?.nis && String(r.nis) === key) || (!r?.nis && String(r?.id || '') === key)) || null;
+
+// --- ambil kandidat dari sumber yang paling reliabel ---
+const mineOne   = _byKey(mine);        // dari raw harian yang sudah dinormalisasi
+const aggOne    = _byKeyAgg(aggRows);  // dari agregat
+
+// --- Nama: prioritas selectedNama -> raw -> agregat -> '-' ---
+const namaSantri =
+  selectedNama ||
+  (mineOne?.nama && String(mineOne.nama).trim()) ||
+  (aggOne?.nama && String(aggOne.nama).trim()) ||
+  '-';
+
+// --- Semester: coba raw -> agregat; nanti bisa di-override UI ---
+let semesterSantri =
+  (mineOne?.semester != null ? Number(mineOne.semester) : null) ??
+  (aggOne?.semester != null ? Number(aggOne.semester) : null) ??
+  null;
+
+// --- Jenjang: coba agregat -> raw; nanti bisa di-override UI ---
+let jenjangSantri =
+  (aggOne?.jenjang ?? null) ??
+  (mineOne?.jenjang ?? null) ??
+  '';
+
+// --- Keterangan (SP): coba agregat -> raw; nanti bisa di-override UI ---
+let keteranganSantri =
+  (aggOne?.keterangan ?? null) ??
+  (mineOne?.keterangan ?? null) ??
+  '';
+
+// --- Override dari UI bila ada pilihan --- 
+const semSel = _getSelectedSemester();
+const jenSel = _getSelectedJenjang();
+const ketSel = _getSelectedKeterangan();
+
+if (semSel != null && Number.isFinite(Number(semSel))) {
+  semesterSantri = Number(semSel);
+}
+if (jenSel != null && String(jenSel).trim() !== '') {
+  jenjangSantri = String(jenSel).trim();
+}
+if (ketSel != null && String(ketSel).trim() !== '') {
+  keteranganSantri = String(ketSel).trim();
+}
+
+// --- Label jenjang untuk tampilan ---
+const jenjangSantriLabel = jenjangLabel(jenjangSantri || '');
 
     // ==== Kelompokkan per tanggal (slot-based) ====
     const byDate = new Map();
