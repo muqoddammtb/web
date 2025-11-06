@@ -5306,6 +5306,27 @@ for (const it of _sortedAbsensi){
   const aggMap = PDF_buildRekapPerKey(allDataNorm);
   applyUIOverrides(allDataNorm, aggMap);
 
+	// ===== Outer join ringan: pastikan semua santri roster muncul minimal 1 baris =====
+	for (const s of (santriData || [])) {
+	const key = String(s.nis || s.id || '').trim();
+	if (!key) continue;
+	if (!aggMap[key]) {
+	aggMap[key] = {
+	id: String(s.id || ''), nis: String(s.nis || ''), nama: s.nama || '-',
+	semester: (s.semester != null ? Number(s.semester) : null),
+	jenjang: s.jenjang ?? null,
+	keterangan: s.keterangan ?? null,
+	// nilai default nol
+	hadir:0, izin:0, sakit:0, alpha:0, lainnya:0,
+	hadirSlots:0, izinSlots:0, sakitSlots:0, alphaSlots:0, targetSlots:0,
+	totalPageSum:0, totalJuz:0, murTotalJuz:0, murCount:0,
+	nilaiSum:0, nilaiCount:0, nilaiMin:0, nilaiMax:0,
+	saSegments:[], pageSegments:[], juzSegments:[],
+	juzSet:new Set(),
+	};
+	}
+	}
+	 
   Object.values(aggMap).forEach(r => {
     const k = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim());
     if (!k) return;
@@ -5988,6 +6009,28 @@ for (const it of _sortedAbsensi){
 
   // 5) Agregasi base + merge angka aggregate D1
   const aggMap = PDF_buildRekapPerKey(allDataNorm);
+
+	// ===== Outer join ringan: pastikan semua santri roster muncul minimal 1 baris =====
+	for (const s of (santriData || [])) {
+	const key = String(s.nis || s.id || '').trim();
+	if (!key) continue;
+	if (!aggMap[key]) {
+	aggMap[key] = {
+	id: String(s.id || ''), nis: String(s.nis || ''), nama: s.nama || '-',
+	semester: (s.semester != null ? Number(s.semester) : null),
+	jenjang: s.jenjang ?? null,
+	keterangan: s.keterangan ?? null,
+	// nilai default nol
+	hadir:0, izin:0, sakit:0, alpha:0, lainnya:0,
+	hadirSlots:0, izinSlots:0, sakitSlots:0, alphaSlots:0, targetSlots:0,
+	totalPageSum:0, totalJuz:0, murTotalJuz:0, murCount:0,
+	nilaiSum:0, nilaiCount:0, nilaiMin:0, nilaiMax:0,
+	saSegments:[], pageSegments:[], juzSegments:[],
+	juzSet:new Set(),
+	};
+	}
+	}
+	 
   applyUIOverrides(allDataNorm, aggMap);
   Object.values(aggMap).forEach(r => {
     const k = (r.nis && String(r.nis).trim()) || (r.id && String(r.id).trim());
