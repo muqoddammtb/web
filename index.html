@@ -5131,6 +5131,11 @@ function buildRosterWhitelist(santriData){
     if (nis) allow.add(nis);
     if (id)  allow.add(id);
   }
+	 // Ambil juga santri yang baru ditambahkan di tabel dashboard (DOM)
+	document.querySelectorAll('[data-key], [data-nis], [data-id]').forEach(row => {
+	const k = (row.dataset.key || row.dataset.nis || row.dataset.id || '').trim();
+	if (k) allow.add(k);
+	});
   return allow;
 }
 
@@ -5345,7 +5350,7 @@ for (const k of Object.keys(aggMap)) {
 }
 	
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
-  const rows = allRows.filter(r => (typeof r.nis === 'string' ? r.nis.trim() !== '' : !!r.nis));
+  const rows = allRows.filter(r => String(r.nis || r.id || '').trim() !== '');
   if (rows.length === 0) throw new Error('Tidak ada data ber-NIS pada rentang tanggal tersebut.');
 
   // 7) Ringkasan (slot)
@@ -6024,7 +6029,7 @@ for (const k of Object.keys(aggMap)) {
 }
 
   const allRows = Object.values(aggMap).sort((a,b)=> (a.nama||a.nis||a.id).localeCompare(b.nama||b.nis||b.id,'id'));
-  const rows = allRows.filter(r => (typeof r.nis === 'string' ? r.nis.trim() !== '' : !!r.nis));
+  const rows = allRows.filter(r => String(r.nis || r.id || '').trim() !== '');
   if (!rows.length) return null;
 
   // 7) Ringkasan kelas
