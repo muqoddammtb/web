@@ -3253,7 +3253,7 @@ async function loadSantriData() {
   overlay.style.display = "flex";
 
   // ===== util jenjang (tetap) =====
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9);
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 6);
 
   const parseJenjang = (v) => {
     const m = /^A(\d+)$/.exec(String(v || "").trim());
@@ -4978,30 +4978,26 @@ function applyUIOverrides(allDataNorm, aggMap){
   // === Helper Kelas/Kelompok ===
 function buildKelasKelompokLine(kelas, kelasEl) {
   const kelasNum = (String(kelas||'').match(/(\d+)/)?.[1]) || (kelas || '-');
-  const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012025: "Ust. Tukimin Abu Rasyid BA",
-  kelas_022025: "Ust. Dicky Miswardi BA",
-  kelas_032025: "Ust. Jundullah BA",
-  kelas_042025: "Ust. Abdullah",
-  kelas_052025: "Ust. Ro'uuf Noor Huda Su'udin S.Pd",
-  kelas_062025: "Ust. Salahuddin Santoaji S.T.P",
-  kelas_072025: "Ust. Hammam Ahmed Saleh",
-  kelas_082025: "Ust. Alif Rafiqul",
-  kelas_092025: "Ust. Ali Wardana S.Pd",
-  kelas_102025: "Ust. Mullah Muhammad Umar",
-  kelas_112025: "Ust. Akhsani Tawqim SE",
-  kelas_122025: "Ust. Ikhsan Nur Khamid",
-  kelas_132025: "Ust. Abdul Haq",
-  kelas_142025: "Ust. Abdullah Al Guspari",
-  kelas_152025: "Ust. Abdullah Rafi",
-  kelas_162025: "Ust. Fajriul Ihsan",
-  kelas_172025: "Ust. Idris",
-  kelas_182025: "Ust. Muhammad Athayya Mumtaz",
-  kelas_192025: "Ust. M. Hanan Azili",
-  kelas_202025: "Ust. Muhammad Rama Miayasin",
-  kelas_212025: "Ust. Nur Afiq",
-  kelas_222025: "Ust. Raditya Baswara Raharjo",
-  kelas_232025: "Ust. Rafie Zahran Kurniawan",
-  kelas_242025: "Ust. Shidiq Hasan Khan"};
+  const custom = window.namaKelasCustom || window.NAMA_KELAS_CUSTOM || {  kelas_012526: "Ustadzah Lylika Tri Canda Medita",
+  kelas_022526: "Ustadzah Dewi Khumariah Rhasya",
+  kelas_032526: "Ustadzah Nadia Nurfadhilah",
+  kelas_042526: "Ustadzah Eliya",
+  kelas_052526: "Ustadzah Rima Karimah",
+  kelas_062526: "Ustadzah Rishana Hanifa",
+  kelas_072526: "Ustadzah Karimah",
+  kelas_082526: "Ustadzah Nurfadhilah Kamaliyah",
+  kelas_092526: "Ustadzah Umi Muthoharoh",
+  kelas_102526: "Ustadzah Sofi Agnia",
+  kelas_112526: "Ustadzah Ririn Nurlaily",
+  kelas_122526: "Ustadzah Zihan Audrian Hidayat",
+  kelas_132526: "Ustadzah Nopia",
+  kelas_142526: "Ustadz Imam Tolhah",
+  kelas_152526: "Ustadz Fahri Aziz",
+  kelas_162526: "Ustadz Saeful Munawar Rizal",
+  kelas_172526: "Ustadz Aflah Musoddaq",
+  kelas_182526: "Ustadz Saif Abdullah",
+  kelas_192526: "Ustadz Muhammad Farhan Hidayat",
+  kelas_202526: "Ustadz Farrid Ilallah"};
     let kelompok = custom[kelas] || "";
     if (!kelompok) {
       const optText = kelasEl?.options?.[kelasEl.selectedIndex]?.text?.trim() || "";
@@ -5833,7 +5829,7 @@ window.PDF_joinRangeSegmentsCompact = PDF_joinRangeSegmentsCompact;
       const rightX = margin.left + colW + colGap;
 
       doc.setFont('helvetica','normal'); doc.setFontSize(11);
-      doc.text(`Tengaran, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
+      doc.text(`Karawang, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
 
       const headY = y + 8;
       doc.text('Mengetahui,', leftX, headY);
@@ -6357,7 +6353,7 @@ for (const k of Object.keys(aggMap)) {
       const rightX = margin.left + colW + colGap;
 
       doc.setFont('helvetica','normal'); doc.setFontSize(11);
-      doc.text(`Tengaran, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
+      doc.text(`Karawang, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
 
       const headY = y + 8;
       doc.text('Mengetahui,', leftX, headY);
@@ -6677,7 +6673,7 @@ async function xlsRekapDownload(){
     return out.length ? out.join(', ') : '-';
   }
   function PDF_percentCapaian(totalJuzNum, semester){
-    const batasSemester = {1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30};
+    const batasSemester = {1: 5, 2: 10, 3: 15, 4: 20, 5: 30};
     const total = Number(totalJuzNum);
     const sem   = Number(semester);
     if (!Number.isFinite(total)) return 0;
@@ -7440,7 +7436,7 @@ const juzTotalTxt  = (usingAbsensiRange || !agg)
     const rightX = margin.left + colW + colGap;
 
     doc.setFont('helvetica','normal'); doc.setFontSize(11);
-    doc.text(`Tengaran, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
+    doc.text(`Karawang, ${ttdDate}`, margin.left + totalW, y, { align:'right' });
 
     const headY = y + 8;
     doc.text('Mengetahui,', leftX, headY);
@@ -9008,7 +9004,7 @@ if (window.currentRowEl){
     else { s=s.replace(/,/g,""); }
     const n = parseFloat(s); return Number.isFinite(n)?n:0;
   };
-  const BATAS = {1: 8, 2: 13, 3: 18, 4: 23, 5: 28, 6: 30};
+  const BATAS = {1: 5, 2: 10, 3: 15, 4: 20, 5: 30};
   const LS_KEY = k => `murRange:${k}`;
 
   function getSantriTable(){
@@ -9793,7 +9789,7 @@ function renderSessionHTML(s){
 </script>
 <script>
   // ====== KONFIG (opsional dari window.*) ======
-  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 9);             // 34 default; 0 = tanpa batas atas
+  const JENJANG_MAX = Number(window.JENJANG_MAX ?? 6);             // 34 default; 0 = tanpa batas atas
   const JENJANG_SAFETY_CAP = Number(window.JENJANG_SAFETY_CAP ?? 1000); // darurat bila tanpa batas
 
   // ====== Helper jenjang dinamis ======
